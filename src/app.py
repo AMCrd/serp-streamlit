@@ -123,7 +123,7 @@ gl = st.text_input("Enter country code: ")
 
 if uploaded_file is not None:
     # Define the file path
-    EXCEL_PATH = "/workspaces/serp-streamlit/serprating.xlsx"
+    EXCEL_PATH = os.getcwd() + "/src/serprating.xlsx"
 
     # Check if the file already exists
     if os.path.exists(EXCEL_PATH):
@@ -133,8 +133,12 @@ if uploaded_file is not None:
     with open(EXCEL_PATH, "wb") as file:
         file.write(uploaded_file.getvalue())
 else:
-    EXCEL_PATH = '/workspaces/serp-streamlit/serpratingtest.xlsx'
+    EXCEL_PATH = os.getcwd() + '/src/serpratingtest.xlsx'
 
+
+import os
+
+st.write("Current working directory:", os.getcwd())
 
 if query != "" and SERP_API_KEY != "":
     if st.button("Calculate SERP Rating Score"):
