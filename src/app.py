@@ -2,7 +2,6 @@ import streamlit as st
 import requests
 import pandas as pd
 from urllib.parse import urlparse
-import tempfile
 import os
 
 # Constants and Configurations
@@ -134,11 +133,6 @@ if uploaded_file is not None:
         file.write(uploaded_file.getvalue())
 else:
     EXCEL_PATH = os.getcwd() + '/src/serpratingtest.xlsx'
-
-
-import os
-
-st.write("Current working directory:", os.getcwd())
 
 if query != "" and SERP_API_KEY != "":
     if st.button("Calculate SERP Rating Score"):
