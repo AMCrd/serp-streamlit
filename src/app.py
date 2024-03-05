@@ -1,16 +1,11 @@
 import streamlit as st
-
-
-uploaded_file = st.file_uploader("Upload a file", type=["csv", "txt"])
-
-SERP_API_KEY = st.text_input("Enter the API key:", "")
-
 import requests
 import pandas as pd
 from urllib.parse import urlparse
+import tempfile
+import os
 
 # Constants and Configurations
-EXCEL_PATH = '/workspaces/serp-streamlit/serpratingtest.xlsx'
 SERP_BASE_URL = "https://serpapi.com/search"
 
 POSITION_MULTIPLIERS = {
@@ -120,51 +115,68 @@ def calculate_serp_rating(final_results, sections_info):
     return serp_rating
 
 
-
+uploaded_file = st.file_uploader("Upload a file", type=["xlsx"])
+SERP_API_KEY = st.text_input("Enter the API key:", "")
 query = st.text_input("Enter your search query: ", "")
 location = st.text_input("Enter location: ")
 gl = st.text_input("Enter country code: ")
 
+if uploaded_file is not None:
+    # Define the file path
+    EXCEL_PATH = "/workspaces/serp-streamlit/serprating.xlsx"
+
+    # Check if the file already exists
+    if os.path.exists(EXCEL_PATH):
+        os.remove(EXCEL_PATH)  # Remove the existing file
+
+    # Save the uploaded file as "serprating.xlsx"
+    with open(EXCEL_PATH, "wb") as file:
+        file.write(uploaded_file.getvalue())
+else:
+    EXCEL_PATH = '/workspaces/serp-streamlit/serpratingtest.xlsx'
+
+
 if query != "" and SERP_API_KEY != "":
-    serp_data = get_serp_data(query, location, gl)
-    organic_results = serp_data.get('organic_results', [])
+    if st.button("Calculate SERP Rating Score"):
+        serp_data = get_serp_data(query, location, gl)
+        organic_results = serp_data.get('organic_results', [])
 
-    domain_info_df = load_domain_info(EXCEL_PATH)
-    classified_organic_results = classify_urls(organic_results, domain_info_df)
-    final_results = assign_numbers_and_calculate_transformed(classified_organic_results)
+        domain_info_df = load_domain_info(EXCEL_PATH)
+        classified_organic_results = classify_urls(organic_results, domain_info_df)
+        final_results = assign_numbers_and_calculate_transformed(classified_organic_results)
 
-    sections_info = extract_links_and_count_sections(serp_data)
-    serp_rating_score = calculate_serp_rating(final_results, sections_info) * 2
-
-
-    # Scaling SERP Rating Score to CliQ KD
-    cliq_kd = (serp_rating_score - 29.4) / (99.4 - 29.4) * 100
+        sections_info = extract_links_and_count_sections(serp_data)
+        serp_rating_score = calculate_serp_rating(final_results, sections_info) * 2
 
 
-    # Displaying counts, links, SERP Rating Score, and CliQ KD
-    st.write("\nSection Counts and Links:")
-    for section, info in sections_info.items():
-        st.write(f"\n{section.capitalize()} Count: {info['count']}")
-        if info["links"]:
-            st.write(f"{section.capitalize()} Links:")
-            for link in info["links"]:
-                st.write(f" - {link}")
-                
+        # Scaling SERP Rating Score to CliQ KD
+        cliq_kd = (serp_rating_score - 29.4) / (99.4 - 29.4) * 100
 
-    st.write(f"\nSERP Rating Score for '{query}': {serp_rating_score}")
-    st.write(f"CliQ KD for '{query}': {cliq_kd:.2f}")
 
-    # Determine and display the CliQ KD message
-    cliq_kd_message = get_cliQ_kd_message(cliq_kd)
-    st.write(cliq_kd_message)
+        # Displaying counts, links, SERP Rating Score, and CliQ KD
+        st.write("\nSection Counts and Links:")
+        for section, info in sections_info.items():
+            st.write(f"\n{section.capitalize()} Count: {info['count']}")
+            if info["links"]:
+                st.write(f"{section.capitalize()} Links:")
+                for link in info["links"]:
+                    st.write(f" - {link}")
+                    
 
-    # Displaying the first 10 organic results with their details
-    st.write("\nFirst 10 Organic Results:")
-    for result in final_results[:10]:
-        st.write(f"Position: {result['position']}, URL: {result.get('link', 'URL not available')}, "
-                f"Regulation: {result['Regulation']} ({result['Regulation_Num']}), "
-                f"Class: {result['Class']} ({result['Class_Num']}), "
-                f"Transformed: {result['Transformed']}")
+        st.write(f"\nSERP Rating Score for '{query}': {serp_rating_score}")
+        st.write(f"CliQ KD for '{query}': {cliq_kd:.2f}")
+
+        # Determine and display the CliQ KD message
+        cliq_kd_message = get_cliQ_kd_message(cliq_kd)
+        st.write(cliq_kd_message)
+
+        # Displaying the first 10 organic results with their details
+        st.write("\nFirst 10 Organic Results:")
+        for result in final_results[:10]:
+            st.write(f"Position: {result['position']}, URL: {result.get('link', 'URL not available')}, "
+                    f"Regulation: {result['Regulation']} ({result['Regulation_Num']}), "
+                    f"Class: {result['Class']} ({result['Class_Num']}), "
+                    f"Transformed: {result['Transformed']}")
 
 
 
