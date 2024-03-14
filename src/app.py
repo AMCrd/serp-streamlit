@@ -101,7 +101,7 @@ def extract_links_and_count_sections(serp_data):
 # Adjusted calculate_serp_rating function
 def calculate_serp_rating(final_results, sections_info):
     serp_rating = sum([
-        sections_info['ads']['count'] * 3,
+        sections_info['ads']['count'] * 2,
         sections_info['related_questions']['count'] * 1.3,
         sections_info['answer_box']['count'] * 1.3
     ])
