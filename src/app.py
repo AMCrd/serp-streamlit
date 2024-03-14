@@ -14,15 +14,15 @@ POSITION_MULTIPLIERS = {
 
 def get_cliQ_kd_message(cliQ_kd):
     if 0 <= cliQ_kd <= 20:
-        return "Very low difficulty; should highly consider in planning and execution"
+        return "Very low difficulty; should highly consider in planning and execution :sunglasses:"
     elif 21 <= cliQ_kd <= 40:
-        return "Low difficulty; should consider in planning and execution"
+        return "Low difficulty; should consider in planning and execution :grinning:"
     elif 41 <= cliQ_kd <= 60:
-        return "Medium difficulty; possible to consider in planning and execution"
+        return "Medium difficulty; possible to consider in planning and execution :relieved:"
     elif 61 <= cliQ_kd <= 80:
-        return "High difficulty; debatable to consider in planning and execution"
+        return "High difficulty; debatable to consider in planning and execution :neutral_face:"
     elif 81 <= cliQ_kd <= 100:
-        return "Very high difficulty; do not consider in planning and execution :heart_eyes:"
+        return "Very high difficulty; do not consider in planning and execution :unamused:"
     else:
         return "Invalid CliQ KD range"
 
