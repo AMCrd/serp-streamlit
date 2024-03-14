@@ -159,24 +159,24 @@ if query != "" and SERP_API_KEY != "":
         st.divider()
         
         st.header("Summary")
-            with st.expander("See summary"):
+        with st.expander("See summary"):
                 
-                # Displaying the first 10 organic results with their details
-                st.subheader("\nOrganic Results:")
-                all_results = []
-                for result in final_results[:10]:
-                    all_results.append({"Position":result['position'], "URL": result.get('link', 'URL not available'), 
-                            "Regulation": result['Regulation'] ,
-                            "Class": result['Class']})
-                    results_table = pd.DataFrame(all_results)
-                st.dataframe(results_table,hide_index=True)
+            # Displaying the first 10 organic results with their details
+            st.subheader("\nOrganic Results:")
+            all_results = []
+            for result in final_results[:10]:
+                all_results.append({"Position":result['position'], "URL": result.get('link', 'URL not available'), 
+                        "Regulation": result['Regulation'] ,
+                        "Class": result['Class']})
+                results_table = pd.DataFrame(all_results)
+            st.dataframe(results_table,hide_index=True)
                 
-                # Displaying counts, links, SERP Rating Score, and CliQ KD
-                st.subheader("\nAds and SERP Features:")
-                for section, info in sections_info.items():
-                    st.write(f"\n{section.capitalize()} Count: {info['count']}")
-                    if info["links"]:
-                        st.write(f"{section.capitalize()} Links:")
-                        for link in info["links"]:
-                            st.write(f" - {link}")
+            # Displaying counts, links, SERP Rating Score, and CliQ KD
+            st.subheader("\nAds and SERP Features:")
+            for section, info in sections_info.items():
+                st.write(f"\n{section.capitalize()} Count: {info['count']}")
+                if info["links"]:
+                    st.write(f"{section.capitalize()} Links:")
+                    for link in info["links"]:
+                        st.write(f" - {link}")
                                 
