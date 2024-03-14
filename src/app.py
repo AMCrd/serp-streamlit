@@ -164,7 +164,7 @@ if query != "" and SERP_API_KEY != "":
             # Displaying the first 10 organic results with their details
             st.subheader("\nOrganic Results:")
             all_results = []
-            for result in final_results[:11]:
+            for result in final_results[:10]:
                 all_results.append({"Position":result['position'], "URL": result.get('link', 'URL not available'), 
                         "Regulation": result['Regulation'] ,
                         "Class": result['Class']})
