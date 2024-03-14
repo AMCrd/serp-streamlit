@@ -150,7 +150,7 @@ if query != "" and SERP_API_KEY != "":
         cliq_kd = (serp_rating_score - 29.4) / (99.4 - 29.4) * 100
 
         # Cliq kd output
-        st.header(f"CliQ KD for '{query}': {cliq_kd:.2f}")
+        st.header(f"CliQ KD for :blue['{query}']: {cliq_kd:.2f}")
         
         # Determine and display the CliQ KD message
         cliq_kd_message = get_cliQ_kd_message(cliq_kd)
