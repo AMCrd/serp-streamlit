@@ -66,8 +66,8 @@ def classify_urls(organic_results, domain_info_df):
 
 # Assign numbers and calculate transformed values
 def assign_numbers_and_calculate_transformed(final_results):
-    class_to_number = {"Publisher": 1, "Operator": 2, "News": 2, "Other": 0}
-    regulation_to_number = {"Regulated": 2, "Unregulated": 1, "Other": 0}
+    class_to_number = {"Publisher": 1, "Operator": 2.5, "News": 2, "App": 2, "Social": 2, "Other": 1}
+    regulation_to_number = {"Regulated": 2.5, "Unregulated": 1, "Other": 1}
     for result in final_results:
         result['Class_Num'] = class_to_number.get(result.get('Class', 'Other'), 0)
         result['Regulation_Num'] = regulation_to_number.get(result.get('Regulation', 'Other'), 0)
@@ -100,9 +100,8 @@ def extract_links_and_count_sections(serp_data):
 
 # Adjusted calculate_serp_rating function
 def calculate_serp_rating(final_results, sections_info):
-    # Access counts directly within the sections_info structure
     serp_rating = sum([
-        sections_info['ads']['count'] * 2,
+        sections_info['ads']['count'] * 3,
         sections_info['related_questions']['count'] * 1.3,
         sections_info['answer_box']['count'] * 1.3
     ])
@@ -150,9 +149,30 @@ if query != "" and SERP_API_KEY != "":
         # Scaling SERP Rating Score to CliQ KD
         cliq_kd = (serp_rating_score - 29.4) / (99.4 - 29.4) * 100
 
-
-        # Displaying counts, links, SERP Rating Score, and CliQ KD
-        st.write("\nSection Counts and Links:")
+    # Cliq kd output
+    st.header(f"CliQ KD for '{query}': {cliq_kd:.2f}")
+    
+    # Determine and display the CliQ KD message
+        cliq_kd_message = get_cliQ_kd_message(cliq_kd)
+        st.subheader(cliq_kd_message)
+    
+    st.divider()
+    
+    st.header("Summary")
+    
+    # Displaying the first 10 organic results with their details
+        st.write("\nFirst 10 Organic Results:")
+        all_results = []
+        for result in final_results[:10]:
+            all_results.append({"Position":result['position'], "URL": result.get('link', 'URL not available'), 
+                    "Regulation": f"{result['Regulation']} {result['Regulation_Num']})",
+                    "Class": f"{result['Class']} ({result['Class_Num']})", 
+                    "Transformed": result['Transformed']})
+        results_table = pd.DataFrame(all_results)
+        st.table(results_table)
+    
+    # Displaying counts, links, SERP Rating Score, and CliQ KD
+        st.write("**\nAds and SERP Features:**")
         for section, info in sections_info.items():
             st.write(f"\n{section.capitalize()} Count: {info['count']}")
             if info["links"]:
@@ -160,21 +180,3 @@ if query != "" and SERP_API_KEY != "":
                 for link in info["links"]:
                     st.write(f" - {link}")
                     
-
-        st.write(f"\nSERP Rating Score for '{query}': {serp_rating_score}")
-        st.write(f"CliQ KD for '{query}': {cliq_kd:.2f}")
-
-        # Determine and display the CliQ KD message
-        cliq_kd_message = get_cliQ_kd_message(cliq_kd)
-        st.write(cliq_kd_message)
-
-        # Displaying the first 10 organic results with their details
-        st.write("\nFirst 10 Organic Results:")
-        for result in final_results[:10]:
-            st.write(f"Position: {result['position']}, URL: {result.get('link', 'URL not available')}, "
-                    f"Regulation: {result['Regulation']} ({result['Regulation_Num']}), "
-                    f"Class: {result['Class']} ({result['Class_Num']}), "
-                    f"Transformed: {result['Transformed']}")
-
-
-
