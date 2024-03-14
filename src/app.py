@@ -171,7 +171,7 @@ if query != "" and SERP_API_KEY != "":
         st.table(results_table)
         
         # Displaying counts, links, SERP Rating Score, and CliQ KD
-        st.write("**\nAds and SERP Features:**")
+        st.subheader("\nAds and SERP Features:")
         for section, info in sections_info.items():
             st.write(f"\n{section.capitalize()} Count: {info['count']}")
             if info["links"]:
