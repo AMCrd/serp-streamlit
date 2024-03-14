@@ -159,6 +159,7 @@ if query != "" and SERP_API_KEY != "":
         st.divider()
         
         st.header("Summary")
+        with st.expander("See explanation"):
         
         # Displaying the first 10 organic results with their details
         st.write("\nFirst 10 Organic Results:")
