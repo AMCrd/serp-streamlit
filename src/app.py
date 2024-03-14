@@ -149,34 +149,34 @@ if query != "" and SERP_API_KEY != "":
         # Scaling SERP Rating Score to CliQ KD
         cliq_kd = (serp_rating_score - 29.4) / (99.4 - 29.4) * 100
 
-    # Cliq kd output
-    st.header(f"CliQ KD for '{query}': {cliq_kd:.2f}")
-    
-    # Determine and display the CliQ KD message
-    cliq_kd_message = get_cliQ_kd_message(cliq_kd)
-    st.subheader(cliq_kd_message)
-    
-    st.divider()
-    
-    st.header("Summary")
-    
-    # Displaying the first 10 organic results with their details
-    st.write("\nFirst 10 Organic Results:")
-    all_results = []
-    for result in final_results[:10]:
-        all_results.append({"Position":result['position'], "URL": result.get('link', 'URL not available'), 
-                "Regulation": f"{result['Regulation']} {result['Regulation_Num']})",
-                "Class": f"{result['Class']} ({result['Class_Num']})", 
-                "Transformed": result['Transformed']})
-        results_table = pd.DataFrame(all_results)
-    st.table(results_table)
-    
-    # Displaying counts, links, SERP Rating Score, and CliQ KD
-    st.write("**\nAds and SERP Features:**")
-    for section, info in sections_info.items():
-        st.write(f"\n{section.capitalize()} Count: {info['count']}")
-        if info["links"]:
-            st.write(f"{section.capitalize()} Links:")
-            for link in info["links"]:
-                st.write(f" - {link}")
-                    
+        # Cliq kd output
+        st.header(f"CliQ KD for '{query}': {cliq_kd:.2f}")
+        
+        # Determine and display the CliQ KD message
+        cliq_kd_message = get_cliQ_kd_message(cliq_kd)
+        st.subheader(cliq_kd_message)
+        
+        st.divider()
+        
+        st.header("Summary")
+        
+        # Displaying the first 10 organic results with their details
+        st.write("\nFirst 10 Organic Results:")
+        all_results = []
+        for result in final_results[:10]:
+            all_results.append({"Position":result['position'], "URL": result.get('link', 'URL not available'), 
+                    "Regulation": f"{result['Regulation']} {result['Regulation_Num']})",
+                    "Class": f"{result['Class']} ({result['Class_Num']})", 
+                    "Transformed": result['Transformed']})
+            results_table = pd.DataFrame(all_results)
+        st.table(results_table)
+        
+        # Displaying counts, links, SERP Rating Score, and CliQ KD
+        st.write("**\nAds and SERP Features:**")
+        for section, info in sections_info.items():
+            st.write(f"\n{section.capitalize()} Count: {info['count']}")
+            if info["links"]:
+                st.write(f"{section.capitalize()} Links:")
+                for link in info["links"]:
+                    st.write(f" - {link}")
+                        
