@@ -165,9 +165,9 @@ if query != "" and SERP_API_KEY != "":
         all_results = []
         for result in final_results[:10]:
             all_results.append({"Position":result['position'], "URL": result.get('link', 'URL not available'), 
-                    "Regulation": f"{result['Regulation']} {result['Regulation_Num']})",
-                    "Class": f"{result['Class']} ({result['Class_Num']})", 
-                    "Transformed": result['Transformed']})
+                    "Regulation": result['Regulation'] ,
+                    "Class": result['Class'], 
+                    )
             results_table = pd.DataFrame(all_results)
         st.table(results_table)
         
