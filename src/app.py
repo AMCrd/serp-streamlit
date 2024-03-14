@@ -168,7 +168,7 @@ if query != "" and SERP_API_KEY != "":
                     "Regulation": result['Regulation'] ,
                     "Class": result['Class']})
             results_table = pd.DataFrame(all_results)
-        st.table(results_table)
+        st.dataframe(results_table,hide_index=True)
         
         # Displaying counts, links, SERP Rating Score, and CliQ KD
         st.subheader("\nAds and SERP Features:")
