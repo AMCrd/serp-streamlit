@@ -162,7 +162,7 @@ if query != "" and SERP_API_KEY != "":
     with st.expander("See summary"):
         
         # Displaying the first 10 organic results with their details
-        st.subheader("\nFOrganic Results:")
+        st.subheader("\nOrganic Results:")
         all_results = []
         for result in final_results[:10]:
             all_results.append({"Position":result['position'], "URL": result.get('link', 'URL not available'), 
