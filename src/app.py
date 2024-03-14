@@ -22,7 +22,7 @@ def get_cliQ_kd_message(cliQ_kd):
     elif 61 <= cliQ_kd <= 80:
         return "High difficulty; debatable to consider in planning and execution"
     elif 81 <= cliQ_kd <= 100:
-        return "Very high difficulty; do not consider in planning and execution"
+        return "Very high difficulty; do not consider in planning and execution :heart_eyes:"
     else:
         return "Invalid CliQ KD range"
 
