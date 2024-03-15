@@ -1,7 +1,4 @@
-import streamlit as st
-import requests
-import pandas as pd
-from urllib.parse import urlparse
+llib.parse import urlparse
 import os
 
 # Constants and Configurations
@@ -26,8 +23,6 @@ def get_cliQ_kd_message(cliQ_kd):
     else:
         return "Invalid CliQ KD range"
 
-
-# Retrieve SERP data
 def get_serp_data(query, location, gl):
     params = {
         "api_key": SERP_API_KEY,
@@ -41,13 +36,11 @@ def get_serp_data(query, location, gl):
     response.raise_for_status()
     return response.json()
 
-# Load domain information from Excel
 def load_domain_info(excel_path):
     df = pd.read_excel(excel_path, engine='openpyxl')
     df['Domain'] = df['Domain'].str.lower().str.replace('www.', '')
     return df
 
-# Classify URLs
 def classify_urls(organic_results, domain_info_df):
     for result in organic_results:
         if 'link' in result:
@@ -64,7 +57,6 @@ def classify_urls(organic_results, domain_info_df):
             result['Class'] = 'Other'
     return organic_results
 
-# Assign numbers and calculate transformed values
 def assign_numbers_and_calculate_transformed(final_results):
     class_to_number = {"Publisher": 1, "Operator": 2.5, "News": 2, "App": 2, "Social": 2, "Other": 1}
     regulation_to_number = {"Regulated": 2.5, "Unregulated": 1, "Other": 1}
@@ -74,36 +66,32 @@ def assign_numbers_and_calculate_transformed(final_results):
         result['Transformed'] = (result['Class_Num'] + result['Regulation_Num']) / 2
     return final_results
 
-# Extract links and count sections
 def extract_links_and_count_sections(serp_data):
     sections_info = {
         "ads": {"count": 0, "links": []},
         "related_questions": {"count": 0, "links": []},
-        "answer_box": {"count": 0, "links": []}
+        "answer_box": {"count": 0, "links": []},
+        "discussions_and_forums": {"count": 0, "links": []},
+        "knowledge_graph": {"count": 0, "links": []}
     }
-    # Extracting ads links
-    for ad in serp_data.get("ads", []):
-        sections_info["ads"]["links"].append(ad.get("link", "No link"))
-    sections_info["ads"]["count"] = len(sections_info["ads"]["links"])
-    
-    # Extracting related questions links
-    for question in serp_data.get("related_questions", []):
-        sections_info["related_questions"]["links"].append(question.get("link", "No link"))
-    sections_info["related_questions"]["count"] = len(sections_info["related_questions"]["links"])
-    
-    # Extracting answer box link
-    if serp_data.get("answer_box"):
-        sections_info["answer_box"]["links"].append(serp_data.get("answer_box", {}).get("link", "No link"))
-        sections_info["answer_box"]["count"] = 1
-
+    # Extracting links and counts
+    for section in sections_info:
+        if section in serp_data:
+            if isinstance(serp_data[section], list):
+                for item in serp_data[section]:
+                    sections_info[section]["links"].append(item.get("link", "No link"))
+                sections_info[section]["count"] = len(sections_info[section]["links"])
+            elif isinstance(serp_data[section], dict) and section == "knowledge_graph":  # Assuming knowledge_graph is a dict
+                sections_info[section]["count"] = 1
     return sections_info
 
-# Adjusted calculate_serp_rating function
 def calculate_serp_rating(final_results, sections_info):
     serp_rating = sum([
         sections_info['ads']['count'] * 3,
         sections_info['related_questions']['count'] * 1.3,
-        sections_info['answer_box']['count'] * 1.3
+        sections_info['answer_box']['count'] * 1.3,
+        sections_info['discussions_and_forums']['count'] * 1.5,
+        sections_info['knowledge_graph']['count'] * 2
     ])
     for result in final_results[:10]:
         position = result['position']
@@ -112,7 +100,7 @@ def calculate_serp_rating(final_results, sections_info):
         serp_rating += transformed_value * multiplier
     return serp_rating
 
-
+# Streamlit UI components
 uploaded_file = st.file_uploader("Upload a file", type=["xlsx"])
 SERP_API_KEY = st.text_input("Enter the API key:", "")
 query = st.text_input("Enter your search query: ", "")
@@ -127,7 +115,7 @@ if uploaded_file is not None:
     if os.path.exists(EXCEL_PATH):
         os.remove(EXCEL_PATH)  # Remove the existing file
 
-    # Save the uploaded file as "serprating.xlsx"
+    # Save the uploaded file
     with open(EXCEL_PATH, "wb") as file:
         file.write(uploaded_file.getvalue())
 else:
@@ -145,38 +133,36 @@ if query != "" and SERP_API_KEY != "":
         sections_info = extract_links_and_count_sections(serp_data)
         serp_rating_score = calculate_serp_rating(final_results, sections_info) * 2
 
-
         # Scaling SERP Rating Score to CliQ KD
         cliq_kd = (serp_rating_score - 29.4) / (99.4 - 29.4) * 100
 
-        # Cliq kd output
-        st.header(f"CliQ KD for :blue['{query}'] in {location}: {cliq_kd:.2f}")
-        
-        # Determine and display the CliQ KD message
+        # Cliq kd output and message
+        st.header(f"CliQ KD for '{query}' in {location}: {cliq_kd:.2f}")
         cliq_kd_message = get_cliQ_kd_message(cliq_kd)
         st.subheader(cliq_kd_message)
         
         st.divider()
         
+        # Summary
         st.header("Summary")
         with st.expander("See summary"):
-                
-            # Displaying the first 10 organic results with their details
-            st.subheader("\nOrganic Results:")
+            # Displaying organic results details
             all_results = []
             for result in final_results[:10]:
-                all_results.append({"Position":result['position'], "URL": result.get('link', 'URL not available'), 
-                        "Regulation": result['Regulation'] ,
-                        "Class": result['Class']})
-                results_table = pd.DataFrame(all_results)
-            st.dataframe(results_table,hide_index=True)
+                all_results.append({
+                    "Position": result['position'], 
+                    "URL": result.get('link', 'URL not available'), 
+                    "Regulation": result['Regulation'],
+                    "Class": result['Class']
+                })
+            results_table = pd.DataFrame(all_results)
+            st.dataframe(results_table, hide_index=True)
                 
-            # Displaying counts, links, SERP Rating Score, and CliQ KD
-            st.subheader("\nAds and SERP Features:")
+            # Displaying counts and links for ads, SERP features, discussions_and_forums, and knowledge_graph
+            st.subheader("Ads and SERP Features:")
             for section, info in sections_info.items():
-                st.write(f"\n{section.capitalize()} Count: {info['count']}")
+                st.write(f"{section.capitalize()} Count: {info['count']}")
                 if info["links"]:
                     st.write(f"{section.capitalize()} Links:")
                     for link in info["links"]:
                         st.write(f" - {link}")
-                                
