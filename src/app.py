@@ -105,6 +105,7 @@ def calculate_serp_rating(final_results, sections_info):
     return serp_rating
 
 # Streamlit UI components
+uploaded_file = st.file_uploader("Upload a file", type=["xlsx"])
 SERP_API_KEY = st.text_input("Enter the API key:", "")
 query = st.text_input("Enter your search query: ", "")
 location = st.text_input("Enter location: ")
