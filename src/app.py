@@ -94,8 +94,8 @@ def calculate_serp_rating(final_results, sections_info):
         sections_info['ads']['count'] * 3,
         sections_info['related_questions']['count'] * 1.3,
         sections_info['answer_box']['count'] * 1.3,
-        sections_info['discussions_and_forums']['count'] * 1.5,
-        sections_info['knowledge_graph']['count'] * 2
+        sections_info['discussions_and_forums']['count'] * 1.8,
+        sections_info['knowledge_graph']['count'] * 3
     ])
     for result in final_results[:10]:
         position = result['position']
@@ -139,7 +139,7 @@ if query != "" and SERP_API_KEY != "":
         serp_rating_score = calculate_serp_rating(final_results, sections_info) * 2
 
         # Scaling SERP Rating Score to CliQ KD
-        cliq_kd = (serp_rating_score - 29.4) / (99.4 - 29.4) * 100
+        cliq_kd = (serp_rating_score - 29.4) / (137.8 - 29.4) * 100
 
         # Cliq kd output and message
         st.header(f"CliQ KD for '{query}' in {location}: {cliq_kd:.2f}")
