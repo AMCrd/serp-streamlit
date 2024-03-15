@@ -26,7 +26,7 @@ def get_cliQ_kd_message(cliQ_kd):
     else:
         return "Invalid CliQ KD range"
 
-def get_serp_data(query, location, gl):
+def get_serp_data(query, location, gl, device):
     params = {
         "api_key": SERP_API_KEY,
         "engine": "google",
@@ -34,6 +34,7 @@ def get_serp_data(query, location, gl):
         "location": location,
         "hl": "en",
         "gl": gl,
+        "device": device,
     }
     response = requests.get(SERP_BASE_URL, params=params)
     response.raise_for_status()
@@ -64,8 +65,8 @@ def assign_numbers_and_calculate_transformed(final_results):
     class_to_number = {"Publisher": 1, "Operator": 2.5, "News": 2, "App": 2, "Social": 2, "Other": 1}
     regulation_to_number = {"Regulated": 2.5, "Unregulated": 1, "Other": 1}
     for result in final_results:
-        result['Class_Num'] = class_to_number.get(result.get('Class', 'Other'), 0)
-        result['Regulation_Num'] = regulation_to_number.get(result.get('Regulation', 'Other'), 0)
+        result['Class_Num'] = class_to_number.get(result.get('Class', 'Other'), 1)
+        result['Regulation_Num'] = regulation_to_number.get(result.get('Regulation', 'Other'), 1)
         result['Transformed'] = (result['Class_Num'] + result['Regulation_Num']) / 2
     return final_results
 
@@ -77,15 +78,14 @@ def extract_links_and_count_sections(serp_data):
         "discussions_and_forums": {"count": 0, "links": []},
         "knowledge_graph": {"count": 0, "links": []}
     }
-    # Extracting links and counts
-    for section in sections_info:
-        if section in serp_data:
-            if isinstance(serp_data[section], list):
-                for item in serp_data[section]:
-                    sections_info[section]["links"].append(item.get("link", "No link"))
-                sections_info[section]["count"] = len(sections_info[section]["links"])
-            elif isinstance(serp_data[section], dict) and section == "knowledge_graph":  # Assuming knowledge_graph is a dict
-                sections_info[section]["count"] = 1
+    for section in sections_info.keys():
+        section_data = serp_data.get(section, [])
+        if isinstance(section_data, list):
+            for item in section_data:
+                sections_info[section]["links"].append(item.get("link", "No link"))
+            sections_info[section]["count"] = len(sections_info[section]["links"])
+        elif isinstance(section_data, dict):  # Assuming presence indicates 1 count
+            sections_info[section]["count"] = 1
     return sections_info
 
 def calculate_serp_rating(final_results, sections_info):
@@ -109,63 +109,35 @@ SERP_API_KEY = st.text_input("Enter the API key:", "")
 query = st.text_input("Enter your search query: ", "")
 location = st.text_input("Enter location: ")
 gl = st.text_input("Enter country code: ")
+device = st.selectbox("Select device:", ["desktop", "tablet", "mobile"])
 
 if uploaded_file is not None:
-    # Define the file path
-    EXCEL_PATH = os.getcwd() + "/src/serprating.xlsx"
-
-    # Check if the file already exists
-    if os.path.exists(EXCEL_PATH):
-        os.remove(EXCEL_PATH)  # Remove the existing file
-
-    # Save the uploaded file
+    EXCEL_PATH = os.path.join(os.getcwd(), "serprating.xlsx")
     with open(EXCEL_PATH, "wb") as file:
         file.write(uploaded_file.getvalue())
 else:
-    EXCEL_PATH = os.getcwd() + '/src/serpratingtest.xlsx'
+    EXCEL_PATH = os.path.join(os.getcwd(), "serpratingtest.xlsx")
 
-if query != "" and SERP_API_KEY != "":
+if query and SERP_API_KEY:
     if st.button("Calculate SERP Rating Score"):
-        serp_data = get_serp_data(query, location, gl)
+        serp_data = get_serp_data(query, location, gl, device)
         organic_results = serp_data.get('organic_results', [])
-
         domain_info_df = load_domain_info(EXCEL_PATH)
         classified_organic_results = classify_urls(organic_results, domain_info_df)
         final_results = assign_numbers_and_calculate_transformed(classified_organic_results)
-
         sections_info = extract_links_and_count_sections(serp_data)
         serp_rating_score = calculate_serp_rating(final_results, sections_info) * 2
-
-        # Scaling SERP Rating Score to CliQ KD
         cliq_kd = (serp_rating_score - 29.4) / (99.4 - 29.4) * 100
 
-        # Cliq kd output and message
         st.header(f"CliQ KD for '{query}' in {location}: {cliq_kd:.2f}")
         cliq_kd_message = get_cliQ_kd_message(cliq_kd)
         st.subheader(cliq_kd_message)
         
-        st.divider()
-        
-        # Summary
-        st.header("Summary")
         with st.expander("See summary"):
-            # Displaying organic results details
-            all_results = []
-            for result in final_results[:10]:
-                all_results.append({
-                    "Position": result['position'], 
-                    "URL": result.get('link', 'URL not available'), 
-                    "Regulation": result['Regulation'],
-                    "Class": result['Class']
-                })
-            results_table = pd.DataFrame(all_results)
-            st.dataframe(results_table, hide_index=True)
-                
-            # Displaying counts and links for ads, SERP features, discussions_and_forums, and knowledge_graph
-            st.subheader("Ads and SERP Features:")
+            results_table = pd.DataFrame(final_results[:10], columns=["position", "link", "Regulation", "Class"])
+            st.dataframe(results_table)
             for section, info in sections_info.items():
                 st.write(f"{section.capitalize()} Count: {info['count']}")
                 if info["links"]:
-                    st.write(f"{section.capitalize()} Links:")
                     for link in info["links"]:
                         st.write(f" - {link}")
