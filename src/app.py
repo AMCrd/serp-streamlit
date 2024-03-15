@@ -12,6 +12,12 @@ POSITION_MULTIPLIERS = {
     6: 1.2, 7: 1.2, 8: 1.2, 9: 1.1, 10: 1.1,
 }
 
+# Alternative POSITION_MULTIPLIERS for cases with 0 ads
+ALTERNATIVE_POSITION_MULTIPLIERS = {
+    1: 4, 2: 3, 3: 2, 4: 1.7, 5: 1.5,
+    6: 1.2, 7: 1.2, 8: 1.2, 9: 1.1, 10: 1.1,
+}
+
 def get_cliQ_kd_message(cliQ_kd):
     if 0 <= cliQ_kd <= 20:
         return "Very low difficulty; should highly consider in planning and execution :sunglasses:"
@@ -90,6 +96,12 @@ def extract_links_and_count_sections(serp_data):
     return sections_info
 
 def calculate_serp_rating(final_results, sections_info):
+    # Determine which set of POSITION_MULTIPLIERS to use
+    if sections_info['ads']['count'] == 0:
+        current_multipliers = ALTERNATIVE_POSITION_MULTIPLIERS
+    else:
+        current_multipliers = POSITION_MULTIPLIERS
+    
     serp_rating = sum([
         sections_info['ads']['count'] * 3,
         sections_info['related_questions']['count'] * 1.3,
@@ -97,11 +109,13 @@ def calculate_serp_rating(final_results, sections_info):
         sections_info['discussions_and_forums']['count'] * 1.8,
         sections_info['knowledge_graph']['count'] * 3
     ])
+    
     for result in final_results[:10]:
         position = result['position']
         transformed_value = result['Transformed']
-        multiplier = POSITION_MULTIPLIERS.get(position, 1)
+        multiplier = current_multipliers.get(position, 1)  # Use the selected multipliers
         serp_rating += transformed_value * multiplier
+    
     return serp_rating
 
 # Streamlit UI components
