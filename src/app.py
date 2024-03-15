@@ -1,4 +1,7 @@
-llib.parse import urlparse
+import streamlit as st
+import requests
+import pandas as pd
+from urllib.parse import urlparse
 import os
 
 # Constants and Configurations
