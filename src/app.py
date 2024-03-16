@@ -68,8 +68,8 @@ def classify_urls(organic_results, domain_info_df):
     return organic_results
 
 def assign_numbers_and_calculate_transformed(final_results):
-    class_to_number = {"Publisher": 1, "Operator": 2.5, "News": 2, "Apps": 2, "Social": 2, "Other": 1}
-    regulation_to_number = {"Regulated": 2.5, "Unregulated": 1, "Other": 1}
+    class_to_number = {"Publisher": 1, "Operator": 2, "News": 2, "Apps": 2, "Social": 2, "Other": 1}
+    regulation_to_number = {"Regulated": 2, "Unregulated": 1, "Other": 1}
     for result in final_results:
         result['Class_Num'] = class_to_number.get(result.get('Class', 'Other'), 0)
         result['Regulation_Num'] = regulation_to_number.get(result.get('Regulation', 'Other'), 0)
