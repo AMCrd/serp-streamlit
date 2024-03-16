@@ -8,13 +8,13 @@ import os
 SERP_BASE_URL = "https://serpapi.com/search"
 
 POSITION_MULTIPLIERS = {
-    1: 2, 2: 1.9, 3: 1.8, 4: 1.7, 5: 1.5,
-    6: 1.2, 7: 1.2, 8: 1.2, 9: 1.1, 10: 1.1,
+    1: 3.2, 2: 2.5, 3: 2.0, 4: 1.5, 5: 1.4,
+    6: 1.3, 7: 1.2, 8: 1.1, 9: 1.05, 10: 1.05,
 }
 
 # Alternative POSITION_MULTIPLIERS for cases with 0 ads
 ALTERNATIVE_POSITION_MULTIPLIERS = {
-    1: 4, 2: 3, 3: 2, 4: 1.7, 5: 1.5,
+    1: 5, 2: 4, 3: 2, 4: 1.7, 5: 1.5,
     6: 1.2, 7: 1.2, 8: 1.2, 9: 1.1, 10: 1.1,
 }
 
@@ -103,10 +103,10 @@ def calculate_serp_rating(final_results, sections_info):
         current_multipliers = POSITION_MULTIPLIERS
     
     serp_rating = sum([
-        sections_info['ads']['count'] * 2,
-        sections_info['related_questions']['count'] * 1.15,
-        sections_info['answer_box']['count'] * 4,
-        sections_info['discussions_and_forums']['count'] * 1.15,
+        sections_info['ads']['count'] * 2.5,
+        sections_info['related_questions']['count'] * 1.05,
+        sections_info['answer_box']['count'] * 2,
+        sections_info['discussions_and_forums']['count'] * 1.05,
         sections_info['knowledge_graph']['count'] * 4
     ])
     
@@ -153,7 +153,7 @@ if query != "" and SERP_API_KEY != "":
         serp_rating_score = calculate_serp_rating(final_results, sections_info) * 2
 
         # Scaling SERP Rating Score to CliQ KD
-        cliq_kd = (serp_rating_score - 27.8) / (128.5 - 27.8) * 100
+        cliq_kd = (serp_rating_score - 32.6) / (121.1 - 32.6) * 100
 
         # Cliq kd output and message
         st.header(f"CliQ KD for '{query}' in {location}: {cliq_kd:.2f}")
