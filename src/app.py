@@ -153,7 +153,7 @@ if query != "" and SERP_API_KEY != "":
         serp_rating_score = calculate_serp_rating(final_results, sections_info) * 2
 
         # Scaling SERP Rating Score to CliQ KD
-        cliq_kd = (serp_rating_score - 32.6) / (121.1 - 32.6) * 100
+        cliq_kd = (serp_rating_score - 32.6) / (130.1 - 32.6) * 100
 
         # Cliq kd output and message
         st.header(f"CliQ KD for '{query}' in {location}: {cliq_kd:.2f}")
