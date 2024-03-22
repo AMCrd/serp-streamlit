@@ -107,7 +107,7 @@ def calculate_serp_rating(final_results, sections_info):
         sections_info['related_questions']['count'] * 1.05,
         sections_info['answer_box']['count'] * 2,
         sections_info['discussions_and_forums']['count'] * 1.05,
-        sections_info['knowledge_graph']['count'] * 4
+        sections_info['knowledge_graph']['count'] * 2
     ])
     
     for result in final_results[:10]:
