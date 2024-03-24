@@ -38,7 +38,7 @@ def get_cliQ_kd_color_message(cliQ_kd):
     elif 81 <= cliQ_kd <= 100:
         color = "red"
     else:
-        color = "black"  # Default color for invalid or unexpected values
+        color = "white"  
     return f"<span style='color: {color}; font-size: 24px;'>{cliQ_kd:.2f}</span>"
 
 def get_cliQ_kd_message(cliQ_kd):
