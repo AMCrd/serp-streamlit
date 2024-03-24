@@ -169,7 +169,7 @@ if query != "" and SERP_API_KEY != "":
 
         # Display CliQ KD with color
         cliq_kd_color_message = get_cliQ_kd_color_message(cliq_kd)
-        st.header(f"CliQ KD for '{query}' in {location}: {cliq_kd_color_message}", unsafe_allow_html=True)
+        st.header st.markdown(f"CliQ KD for '{query}' in {location}: {cliq_kd_color_message}", unsafe_allow_html=True)
         
         cliq_kd_message = get_cliQ_kd_message(cliq_kd)
         st.subheader(cliq_kd_message)
