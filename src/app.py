@@ -26,6 +26,21 @@ LABEL_MAPPING = {
     "knowledge_graph": "Knowledge Graph"
 }
 
+def get_cliQ_kd_color_message(cliQ_kd):
+    if 0 <= cliQ_kd <= 20:
+        color = "green"
+    elif 21 <= cliQ_kd <= 40:
+        color = "lightgreen"
+    elif 41 <= cliQ_kd <= 60:
+        color = "yellow"
+    elif 61 <= cliQ_kd <= 80:
+        color = "orange"
+    elif 81 <= cliQ_kd <= 100:
+        color = "red"
+    else:
+        color = "black"  # Default color for invalid or unexpected values
+    return f"<span style='color: {color};'>{cliQ_kd:.2f}</span>"
+
 def get_cliQ_kd_message(cliQ_kd):
     if 0 <= cliQ_kd <= 20:
         return "Very low difficulty; should highly consider in planning and execution :sunglasses:"
@@ -61,15 +76,11 @@ def load_domain_info(excel_path):
 
 def classify_urls(organic_results, domain_info_df):
     for result in organic_results:
-        if 'link' in result:
-            domain = urlparse(result['link']).netloc.lower().replace('www.', '')
-            matching_info = domain_info_df[domain_info_df['Domain'] == domain]
-            if not matching_info.empty:
-                result['Regulation'] = matching_info.iloc[0]['Regulation']
-                result['Class'] = matching_info.iloc[0]['Class']
-            else:
-                result['Regulation'] = 'Other'
-                result['Class'] = 'Other'
+        domain = urlparse(result['link']).netloc.lower().replace('www.', '')
+        matching_info = domain_info_df[domain_info_df['Domain'] == domain]
+        if not matching_info.empty:
+            result['Regulation'] = matching_info.iloc[0]['Regulation']
+            result['Class'] = matching_info.iloc[0]['Class']
         else:
             result['Regulation'] = 'Other'
             result['Class'] = 'Other'
@@ -92,19 +103,17 @@ def extract_links_and_count_sections(serp_data):
         "discussions_and_forums": {"count": 0, "links": []},
         "knowledge_graph": {"count": 0, "links": []}
     }
-    # Extracting links and counts
     for section in sections_info:
         if section in serp_data:
             if isinstance(serp_data[section], list):
                 for item in serp_data[section]:
                     sections_info[section]["links"].append(item.get("link", "No link"))
                 sections_info[section]["count"] = len(sections_info[section]["links"])
-            elif isinstance(serp_data[section], dict) and section == "knowledge_graph":  # Assuming knowledge_graph is a dict
+            elif isinstance(serp_data[section], dict) and section == "knowledge_graph":
                 sections_info[section]["count"] = 1
     return sections_info
 
 def calculate_serp_rating(final_results, sections_info):
-    # Determine which set of POSITION_MULTIPLIERS to use
     if sections_info['ads']['count'] == 0:
         current_multipliers = ALTERNATIVE_POSITION_MULTIPLIERS
     else:
@@ -121,7 +130,7 @@ def calculate_serp_rating(final_results, sections_info):
     for result in final_results[:10]:
         position = result['position']
         transformed_value = result['Transformed']
-        multiplier = current_multipliers.get(position, 1)  # Use the selected multipliers
+        multiplier = current_multipliers.get(position, 1)
         serp_rating += transformed_value * multiplier
     
     return serp_rating
@@ -135,14 +144,9 @@ gl = st.text_input("Enter country code: ", help="Enter the 2-letter country code
 device = st.selectbox("Select device:", ["desktop", "tablet", "mobile"], help="Choose the type of device to simulate the search on. This affects how search results are fetched.")
 
 if uploaded_file is not None:
-    # Define the file path
     EXCEL_PATH = os.getcwd() + "/src/serprating.xlsx"
-
-    # Check if the file already exists
     if os.path.exists(EXCEL_PATH):
-        os.remove(EXCEL_PATH)  # Remove the existing file
-
-    # Save the uploaded file
+        os.remove(EXCEL_PATH)
     with open(EXCEL_PATH, "wb") as file:
         file.write(uploaded_file.getvalue())
 else:
@@ -163,8 +167,10 @@ if query != "" and SERP_API_KEY != "":
         # Scaling SERP Rating Score to CliQ KD
         cliq_kd = (serp_rating_score - 32.6) / (93 - 32.6) * 100
 
-        # Cliq kd output and message
-        st.header(f"CliQ KD for '{query}' in {location}: {cliq_kd:.2f}")
+        # Display CliQ KD with color
+        cliq_kd_color_message = get_cliQ_kd_color_message(cliq_kd)
+        st.markdown(f"CliQ KD for '{query}' in {location}: {cliq_kd_color_message}", unsafe_allow_html=True)
+        
         cliq_kd_message = get_cliQ_kd_message(cliq_kd)
         st.subheader(cliq_kd_message)
         
