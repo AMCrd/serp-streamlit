@@ -18,6 +18,14 @@ ALTERNATIVE_POSITION_MULTIPLIERS = {
     6: 1.2, 7: 1.2, 8: 1.2, 9: 1.1, 10: 1.1,
 }
 
+LABEL_MAPPING = {
+    "ads": "Sponsored Ads",
+    "related_questions": "People Also Ask",
+    "answer_box": "Answer Box",
+    "discussions_and_forums": "Discussion and Forums",
+    "knowledge_graph": "Knowledge Graph"
+}
+
 def get_cliQ_kd_message(cliQ_kd):
     if 0 <= cliQ_kd <= 20:
         return "Very low difficulty; should highly consider in planning and execution :sunglasses:"
@@ -176,12 +184,14 @@ if query != "" and SERP_API_KEY != "":
                 })
             results_table = pd.DataFrame(all_results)
             st.dataframe(results_table, hide_index=True)
-                
+
             # Displaying counts and links for ads, SERP features, discussions_and_forums, and knowledge_graph
             st.subheader("Ads and SERP Features:")
             for section, info in sections_info.items():
-                st.write(f"{section.capitalize()} Count: {info['count']}")
+                # Use the LABEL_MAPPING to get the preferred label
+                display_label = LABEL_MAPPING.get(section, section.capitalize())
+                st.write(f"{display_label} Count: {info['count']}")
                 if info["links"]:
-                    st.write(f"{section.capitalize()} Links:")
+                    st.write(f"{display_label} Links:")
                     for link in info["links"]:
                         st.write(f" - {link}")
