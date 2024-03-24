@@ -127,12 +127,12 @@ def calculate_serp_rating(final_results, sections_info):
     return serp_rating
 
 # Streamlit UI components
-uploaded_file = st.file_uploader("Upload a file", type=["xlsx"])
-SERP_API_KEY = st.text_input("Enter the API key:", "")
-query = st.text_input("Enter your search query: ", "")
-location = st.text_input("Enter location: ")
-gl = st.text_input("Enter country code: ")
-device = st.selectbox("Select device:", ["desktop", "tablet", "mobile"])
+uploaded_file = st.file_uploader("Upload a file", type=["xlsx"], help="Upload the Excel file if Domains aren't tagged correctly")
+SERP_API_KEY = st.text_input("Enter the API key:", "", help="Enter your SERP API key. You can find this in your SERP API dashboard.")
+query = st.text_input("Enter your search query: ", "", help="Enter the search term you want to analyze. Example: 'best online casinos'.")
+location = st.text_input("Enter location: ", help="Specify the location for your search. Example: 'New York, USA'")
+gl = st.text_input("Enter country code: ", help="Enter the 2-letter country code. Example: 'US' for the United States.")
+device = st.selectbox("Select device:", ["desktop", "tablet", "mobile"], help="Choose the type of device to simulate the search on. This affects how search results are fetched.")
 
 if uploaded_file is not None:
     # Define the file path
