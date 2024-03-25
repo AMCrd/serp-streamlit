@@ -103,7 +103,7 @@ def calculate_serp_rating(final_results, sections_info):
         current_multipliers = POSITION_MULTIPLIERS
     
     serp_rating = sum([
-        sections_info['ads']['count'] * 0,
+        sections_info['ads']['count'] * 2,
         sections_info['related_questions']['count'] * 1.05,
         sections_info['answer_box']['count'] * 1,
         sections_info['discussions_and_forums']['count'] * 1.05,
