@@ -8,13 +8,13 @@ import os
 SERP_BASE_URL = "https://serpapi.com/search"
 
 POSITION_MULTIPLIERS = {
-    1: 3.2, 2: 2.5, 3: 2.0, 4: 1.5, 5: 1.4,
+    1: 5, 2: 4, 3: 3, 4: 1.5, 5: 1.4,
     6: 1.3, 7: 1.2, 8: 1.1, 9: 1.05, 10: 1.05,
 }
 
 # Alternative POSITION_MULTIPLIERS for cases with 0 ads
 ALTERNATIVE_POSITION_MULTIPLIERS = {
-    1: 3.2, 2: 2.5, 3: 2.0, 4: 1.5, 5: 1.4,
+    1: 5, 2: 4, 3: 3, 4: 1.5, 5: 1.4,
     6: 1.3, 7: 1.2, 8: 1.1, 9: 1.05, 10: 1.05,
 }
 
