@@ -122,8 +122,8 @@ def calculate_serp_rating(final_results, sections_info):
 uploaded_file = st.file_uploader("Upload a file", type=["xlsx"])
 SERP_API_KEY = st.text_input("Enter the API key:", "")
 query = st.text_input("Enter your search query: ", "")
-location = st.selectbox("Select device:", ["los angeles, california, united states", "houston, texas, united states", "denver, colorado, united states", "milwaukee, wisconsin, united states", "baltimore, maryland, united states", "kansas city, missouri, united states", "indianapolis, indiana, united states", "nashville, tennessee, united states", "boston, massachusetts, united states", "phoenix, arizona, united states", "seattle, washington, united states", "virginia beach, virginia, united states", "newark, new jersey, united states", "detroit, michigan, united states", "charlotte, north carolina, united states", "atlanta, georgia, united states", "columbus, ohio, united states", "chicago, illinois, united states", "philadelphia, pennsylvania, united states", "new york city, new york, united states", "jacksonville, florida, united states"])
-gl = st.selectbox("Select device:", ["us", "ca", "au"])
+location = st.selectbox("Select location:", ["los angeles, california, united states", "houston, texas, united states", "denver, colorado, united states", "milwaukee, wisconsin, united states", "baltimore, maryland, united states", "kansas city, missouri, united states", "indianapolis, indiana, united states", "nashville, tennessee, united states", "boston, massachusetts, united states", "phoenix, arizona, united states", "seattle, washington, united states", "virginia beach, virginia, united states", "newark, new jersey, united states", "detroit, michigan, united states", "charlotte, north carolina, united states", "atlanta, georgia, united states", "columbus, ohio, united states", "chicago, illinois, united states", "philadelphia, pennsylvania, united states", "new york city, new york, united states", "jacksonville, florida, united states"])
+gl = st.selectbox("Select country code:", ["us", "ca", "au"])
 device = st.selectbox("Select device:", ["desktop", "tablet", "mobile"])
 
 if uploaded_file is not None:
