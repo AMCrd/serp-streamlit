@@ -18,6 +18,29 @@ ALTERNATIVE_POSITION_MULTIPLIERS = {
     6: 1.3, 7: 1.2, 8: 1.1, 9: 1.05, 10: 1.05,
 }
 
+LABEL_MAPPING = {
+    "ads": "Sponsored Ads",
+    "related_questions": "People Also Ask",
+    "answer_box": "Answer Box",
+    "discussions_and_forums": "Discussion and Forums",
+    "knowledge_graph": "Knowledge Graph"
+}
+
+def get_cliQ_kd_color_message(cliQ_kd):
+    if 0 <= cliQ_kd <= 20:
+        color = "green"
+    elif 21 <= cliQ_kd <= 40:
+        color = "lightgreen"
+    elif 41 <= cliQ_kd <= 60:
+        color = "yellow"
+    elif 61 <= cliQ_kd <= 80:
+        color = "orange"
+    elif 81 <= cliQ_kd <= 100:
+        color = "red"
+    else:
+        color = "white"  
+    return f"<span style='color: {color}; font-size: 24px;'>{cliQ_kd:.2f}</span>"
+
 def get_cliQ_kd_message(cliQ_kd):
     if 0 <= cliQ_kd <= 20:
         return "Very low difficulty; should highly consider in planning and execution :sunglasses:"
@@ -53,15 +76,11 @@ def load_domain_info(excel_path):
 
 def classify_urls(organic_results, domain_info_df):
     for result in organic_results:
-        if 'link' in result:
-            domain = urlparse(result['link']).netloc.lower().replace('www.', '')
-            matching_info = domain_info_df[domain_info_df['Domain'] == domain]
-            if not matching_info.empty:
-                result['Regulation'] = matching_info.iloc[0]['Regulation']
-                result['Class'] = matching_info.iloc[0]['Class']
-            else:
-                result['Regulation'] = 'Other'
-                result['Class'] = 'Other'
+        domain = urlparse(result['link']).netloc.lower().replace('www.', '')
+        matching_info = domain_info_df[domain_info_df['Domain'] == domain]
+        if not matching_info.empty:
+            result['Regulation'] = matching_info.iloc[0]['Regulation']
+            result['Class'] = matching_info.iloc[0]['Class']
         else:
             result['Regulation'] = 'Other'
             result['Class'] = 'Other'
@@ -84,19 +103,17 @@ def extract_links_and_count_sections(serp_data):
         "discussions_and_forums": {"count": 0, "links": []},
         "knowledge_graph": {"count": 0, "links": []}
     }
-    # Extracting links and counts
     for section in sections_info:
         if section in serp_data:
             if isinstance(serp_data[section], list):
                 for item in serp_data[section]:
                     sections_info[section]["links"].append(item.get("link", "No link"))
                 sections_info[section]["count"] = len(sections_info[section]["links"])
-            elif isinstance(serp_data[section], dict) and section == "knowledge_graph": 
+            elif isinstance(serp_data[section], dict) and section == "knowledge_graph":
                 sections_info[section]["count"] = 1
     return sections_info
 
 def calculate_serp_rating(final_results, sections_info):
-    # Determine which set of POSITION_MULTIPLIERS to use
     if sections_info['ads']['count'] == 0:
         current_multipliers = ALTERNATIVE_POSITION_MULTIPLIERS
     else:
@@ -113,28 +130,24 @@ def calculate_serp_rating(final_results, sections_info):
     for result in final_results[:10]:
         position = result['position']
         transformed_value = result['Transformed']
-        multiplier = current_multipliers.get(position, 1)  # Use the selected multipliers
+        multiplier = current_multipliers.get(position, 1)
         serp_rating += transformed_value * multiplier
     
     return serp_rating
 
 # Streamlit UI components
-uploaded_file = st.file_uploader("Upload a file", type=["xlsx"])
-SERP_API_KEY = st.text_input("Enter the API key:", "")
-query = st.text_input("Enter your search query: ", "")
-location = st.selectbox("Select location:", ["los angeles, california, united states", "houston, texas, united states", "denver, colorado, united states", "milwaukee, wisconsin, united states", "baltimore, maryland, united states", "kansas city, missouri, united states", "indianapolis, indiana, united states", "nashville, tennessee, united states", "boston, massachusetts, united states", "phoenix, arizona, united states", "seattle, washington, united states", "virginia beach, virginia, united states", "newark, new jersey, united states", "detroit, michigan, united states", "charlotte, north carolina, united states", "atlanta, georgia, united states", "columbus, ohio, united states", "chicago, illinois, united states", "philadelphia, pennsylvania, united states", "new york city, new york, united states", "jacksonville, florida, united states"])
-gl = st.selectbox("Select country code:", ["us", "ca", "au"])
-device = st.selectbox("Select device:", ["desktop", "tablet", "mobile"])
+uploaded_file = st.file_uploader("Upload a file", type=["xlsx"], help="Upload the Excel file if Domains aren't tagged correctly")
+SERP_API_KEY = st.text_input("Enter the API key:", "", help="Enter your SERP API key. You can find this in your SERP API dashboard.")
+query = st.text_input("Enter your search query: ", "", help="Enter the search term you want to analyze. Example: 'best online casinos'.")
+location = st.selectbox("Select location:", ["los angeles, california, united states", "houston, texas, united states", "denver, colorado, united states", "milwaukee, wisconsin, united states", "baltimore, maryland, united states", "kansas city, missouri, united states", "indianapolis, indiana, united states", "nashville, tennessee, united states", "boston, massachusetts, united states", "phoenix, arizona, united states", "seattle, washington, united states", "virginia beach, virginia, united states", "newark, new jersey, united states", "detroit, michigan, united states", "charlotte, north carolina, united states", "atlanta, georgia, united states", "columbus, ohio, united states", "chicago, illinois, united states", "philadelphia, pennsylvania, united states", "new york city, new york, united states", "jacksonville, florida, united states"]
+, help="Specify the location for your search. Example: 'Los Angeles, California, United States'")
+gl = st.selectbox("Select country code:", ["us", "ca", "au"], help="Enter the 2-letter country code. Example: 'US' for the United States.")
+device = st.selectbox("Select device:", ["desktop", "tablet", "mobile"], help="Choose the type of device to simulate the search on. This affects how search results are fetched.")
 
 if uploaded_file is not None:
-    # Define the file path
     EXCEL_PATH = os.getcwd() + "/src/serprating.xlsx"
-
-    # Check if the file already exists
     if os.path.exists(EXCEL_PATH):
-        os.remove(EXCEL_PATH)  # Remove the existing file
-
-    # Save the uploaded file
+        os.remove(EXCEL_PATH)
     with open(EXCEL_PATH, "wb") as file:
         file.write(uploaded_file.getvalue())
 else:
@@ -155,8 +168,10 @@ if query != "" and SERP_API_KEY != "":
         # Scaling SERP Rating Score to CliQ KD
         cliq_kd = (serp_rating_score - 41.2) / (95.3 - 41.2) * 100
 
-        # Cliq kd output and message
-        st.header(f"CliQ KD for '{query}' in {location}: {cliq_kd:.2f}")
+        # Display CliQ KD with color
+        cliq_kd_color_message = get_cliQ_kd_color_message(cliq_kd)
+        st.markdown(f"CliQ KD for '{query}' in {location}: {cliq_kd_color_message}", unsafe_allow_html=True)
+        
         cliq_kd_message = get_cliQ_kd_message(cliq_kd)
         st.subheader(cliq_kd_message)
         
@@ -176,12 +191,15 @@ if query != "" and SERP_API_KEY != "":
                 })
             results_table = pd.DataFrame(all_results)
             st.dataframe(results_table, hide_index=True)
-                
+
             # Displaying counts and links for ads, SERP features, discussions_and_forums, and knowledge_graph
             st.subheader("Ads and SERP Features:")
             for section, info in sections_info.items():
-                st.write(f"{section.capitalize()} Count: {info['count']}")
+                # Use the LABEL_MAPPING to get the preferred label
+                display_label = LABEL_MAPPING.get(section, section.capitalize())
+                st.write(f"{display_label} Count: {info['count']}")
                 if info["links"]:
-                    st.write(f"{section.capitalize()} Links:")
+                    st.write(f"{display_label} Links:")
                     for link in info["links"]:
                         st.write(f" - {link}")
+
