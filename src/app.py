@@ -14,8 +14,8 @@ POSITION_MULTIPLIERS = {
 
 # Alternative POSITION_MULTIPLIERS for cases with 0 ads
 ALTERNATIVE_POSITION_MULTIPLIERS = {
-    1: 5, 2: 4, 3: 2, 4: 1.7, 5: 1.5,
-    6: 1.2, 7: 1.2, 8: 1.2, 9: 1.1, 10: 1.1,
+    1: 3.2, 2: 2.5, 3: 2.0, 4: 1.5, 5: 1.4,
+    6: 1.3, 7: 1.2, 8: 1.1, 9: 1.05, 10: 1.05,
 }
 
 def get_cliQ_kd_message(cliQ_kd):
@@ -91,7 +91,7 @@ def extract_links_and_count_sections(serp_data):
                 for item in serp_data[section]:
                     sections_info[section]["links"].append(item.get("link", "No link"))
                 sections_info[section]["count"] = len(sections_info[section]["links"])
-            elif isinstance(serp_data[section], dict) and section == "knowledge_graph":  # Assuming knowledge_graph is a dict
+            elif isinstance(serp_data[section], dict) and section == "knowledge_graph": 
                 sections_info[section]["count"] = 1
     return sections_info
 
@@ -103,7 +103,7 @@ def calculate_serp_rating(final_results, sections_info):
         current_multipliers = POSITION_MULTIPLIERS
     
     serp_rating = sum([
-        sections_info['ads']['count'] * 2.5,
+        sections_info['ads']['count'] * 0,
         sections_info['related_questions']['count'] * 1.05,
         sections_info['answer_box']['count'] * 2,
         sections_info['discussions_and_forums']['count'] * 1.05,
