@@ -193,7 +193,7 @@ if query != "" and SERP_API_KEY != "":
             # Assuming `results_table` is your DataFrame
             markdown_table = "Position | URL | Regulation | Class\n--- | --- | --- | ---\n"
             for _, row in results_table.iterrows():
-                markdown_table += f"{row['Position']} | [row['URL']]({row['URL']}) | {row['Regulation']} | {row['Class']}\n"
+                markdown_table += f"{row['Position']} | [{row['URL']}]({row['URL']}) | {row['Regulation']} | {row['Class']}\n"
             
             st.markdown(markdown_table, unsafe_allow_html=True)
         
