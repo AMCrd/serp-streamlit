@@ -136,6 +136,7 @@ def calculate_serp_rating(final_results, sections_info):
     return serp_rating
 
 # Streamlit UI components
+st.set_page_config(layout="wide")
 uploaded_file = st.file_uploader("Upload a file", type=["xlsx"], help="Upload the Excel file if Domains aren't tagged correctly")
 SERP_API_KEY = st.text_input("Enter the API key:", "", help="Enter your SERP API key. You can find this in your SERP API dashboard.")
 query = st.text_input("Enter your search query: ", "", help="Enter the search term you want to analyze. Example: 'best online casinos'.")
