@@ -190,16 +190,21 @@ if query != "" and SERP_API_KEY != "":
                     "Class": result['Class']
                 })
             results_table = pd.DataFrame(all_results)
-            st.table(results_table.style.format({'URL': lambda x: f"[Link]({x})"}).hide_index())
+            # Assuming `results_table` is your DataFrame
+            markdown_table = "Position | URL | Regulation | Class\n--- | --- | --- | ---\n"
+            for _, row in results_table.iterrows():
+                markdown_table += f"{row['Position']} | [Link]({row['URL']}) | {row['Regulation']} | {row['Class']}\n"
+            
+            st.markdown(markdown_table, unsafe_allow_html=True)
         
-        # Enhanced Counts and Links Display
-        st.subheader("Ads and SERP Features:")
-        for section, info in sections_info.items():
-            # Use the LABEL_MAPPING to get the preferred label
-            display_label = LABEL_MAPPING.get(section, section.capitalize())
-            st.markdown(f"**{display_label} Count:** {info['count']}")
-            if info["links"]:
-                st.markdown(f"**{display_label} Links:**")
-                for link in info["links"]:
-                    # Using Markdown to display links as clickable URLs
-                    st.markdown(f"- [{link}]({link})", unsafe_allow_html=True)
+            # Enhanced Counts and Links Display
+            st.subheader("Ads and SERP Features:")
+            for section, info in sections_info.items():
+                # Use the LABEL_MAPPING to get the preferred label
+                display_label = LABEL_MAPPING.get(section, section.capitalize())
+                st.markdown(f"**{display_label} Count:** {info['count']}")
+                if info["links"]:
+                    st.markdown(f"**{display_label} Links:**")
+                    for link in info["links"]:
+                        # Using Markdown to display links as clickable URLs
+                        st.markdown(f"- [{link}]({link})", unsafe_allow_html=True)
