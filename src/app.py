@@ -177,10 +177,10 @@ if query != "" and SERP_API_KEY != "":
         
         st.divider()
 
-        # Improved Summary Section
+        # Summary
         st.header("Summary")
-        with st.expander("See summary", expanded=True):
-            # Displaying organic results details in a more visually appealing format
+        with st.expander("See summary"):
+            # Displaying organic results details
             all_results = []
             for result in final_results[:10]:
                 all_results.append({
@@ -190,19 +190,15 @@ if query != "" and SERP_API_KEY != "":
                     "Class": result['Class']
                 })
             results_table = pd.DataFrame(all_results)
-            st.table(results_table.style.format({'URL': lambda x: f"[Link]({x})"}).hide_index())
-        
-        # Enhanced Counts and Links Display
-        st.subheader("Ads and SERP Features:")
-        for section, info in sections_info.items():
-            # Use the LABEL_MAPPING to get the preferred label
-            display_label = LABEL_MAPPING.get(section, section.capitalize())
-            st.markdown(f"**{display_label} Count:** {info['count']}")
-            if info["links"]:
-                st.markdown(f"**{display_label} Links:**")
-                for link in info["links"]:
-                    # Using Markdown to display links as clickable URLs
-                    st.markdown(f"- [{link}]({link})", unsafe_allow_html=True)
+            st.dataframe(results_table, hide_index=True)
 
-
-        
+            # Displaying counts and links for ads, SERP features, discussions_and_forums, and knowledge_graph
+            st.subheader("Ads and SERP Features:")
+            for section, info in sections_info.items():
+                # Use the LABEL_MAPPING to get the preferred label
+                display_label = LABEL_MAPPING.get(section, section.capitalize())
+                st.write(f"{display_label} Count: {info['count']}")
+                if info["links"]:
+                    st.write(f"{display_label} Links:")
+                    for link in info["links"]:
+                        st.write(f" - {link}")
