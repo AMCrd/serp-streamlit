@@ -64,6 +64,7 @@ def get_serp_data(query, location, gl, device):
         "hl": "en",
         "gl": gl,
         "device": device,
+        "num": 20,
     }
     response = requests.get(SERP_BASE_URL, params=params)
     response.raise_for_status()
@@ -183,7 +184,7 @@ if query != "" and SERP_API_KEY != "":
         with st.expander("See summary", expanded=True):
             # Displaying organic results details in a more visually appealing format
             all_results = []
-            for result in final_results[:11]:
+            for result in final_results[:10]:
                 all_results.append({
                     "Position": result['position'], 
                     "URL": result.get('link', 'URL not available'), 
