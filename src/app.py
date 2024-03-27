@@ -183,7 +183,7 @@ if query != "" and SERP_API_KEY != "":
         with st.expander("See summary", expanded=True):
             # Displaying organic results details in a more visually appealing format
             all_results = []
-            for result in final_results[:10]:
+            for result in final_results[:11]:
                 all_results.append({
                     "Position": result['position'], 
                     "URL": result.get('link', 'URL not available'), 
