@@ -12,11 +12,8 @@ POSITION_MULTIPLIERS = {
     6: 1.3, 7: 1.2, 8: 1.1, 9: 1.05, 10: 1.05,
 }
 
-# Alternative POSITION_MULTIPLIERS for cases with 0 ads
-ALTERNATIVE_POSITION_MULTIPLIERS = {
-    1: 5, 2: 4, 3: 3, 4: 1.5, 5: 1.4,
-    6: 1.3, 7: 1.2, 8: 1.1, 9: 1.05, 10: 1.05,
-}
+# Alternative POSITION_MULTIPLIERS are identical in this version
+ALTERNATIVE_POSITION_MULTIPLIERS = POSITION_MULTIPLIERS
 
 LABEL_MAPPING = {
     "ads": "Sponsored Ads",
@@ -40,20 +37,6 @@ def get_cliQ_kd_color_message(cliQ_kd):
     else:
         color = "white"  
     return f"<span style='color: {color}; font-size: 24px;'>{cliQ_kd:.2f}</span>"
-
-def get_cliQ_kd_message(cliQ_kd):
-    if 0 <= cliQ_kd <= 20:
-        return "Very low difficulty; should highly consider in planning and execution :sunglasses:"
-    elif 21 <= cliQ_kd <= 40:
-        return "Low difficulty; should consider in planning and execution :grinning:"
-    elif 41 <= cliQ_kd <= 60:
-        return "Medium difficulty; possible to consider in planning and execution :relieved:"
-    elif 61 <= cliQ_kd <= 80:
-        return "High difficulty; debatable to consider in planning and execution :neutral_face:"
-    elif 81 <= cliQ_kd <= 100:
-        return "Very high difficulty; do not consider in planning and execution :unamused:"
-    else:
-        return "Invalid CliQ KD range"
 
 def get_serp_data(query, location, gl, device):
     params = {
@@ -136,13 +119,16 @@ def calculate_serp_rating(final_results, sections_info):
     
     return serp_rating
 
-# Streamlit UI components
+# Streamlit UI components setup
 st.set_page_config(layout="wide")
 uploaded_file = st.file_uploader("Upload a file", type=["xlsx"], help="Upload the Excel file if Domains aren't tagged correctly")
 SERP_API_KEY = st.text_input("Enter the API key:", "", help="Enter your SERP API key. You can find this in your SERP API dashboard.")
-query = st.text_input("Enter your search query: ", "", help="Enter the search term you want to analyze. Example: 'best online casinos'.")
-location = st.selectbox("Select location:", ["los angeles, california, united states", "houston, texas, united states", "denver, colorado, united states", "milwaukee, wisconsin, united states", "baltimore, maryland, united states", "kansas city, missouri, united states", "indianapolis, indiana, united states", "nashville, tennessee, united states", "boston, massachusetts, united states", "phoenix, arizona, united states", "seattle, washington, united states", "virginia beach, virginia, united states", "newark, new jersey, united states", "detroit, michigan, united states", "charlotte, north carolina, united states", "atlanta, georgia, united states", "columbus, ohio, united states", "chicago, illinois, united states", "philadelphia, pennsylvania, united states", "new york city, new york, united states", "jacksonville, florida, united states"]
-, help="Select the location for your search. Example: 'Los Angeles, California, United States'")
+
+# New: Allow multiple queries input
+queries_input = st.text_area("Enter up to 5 search queries, separated by a newline:", "", help="Enter the search terms you want to analyze, one per line. Example: 'best online casinos\nonline gambling sites'.")
+queries = queries_input.strip().split('\n')[:5]  # Split by newline and take up to 5 queries
+
+location = st.selectbox("Select location:", ["los angeles, california, united states", "houston, texas, united states", "denver, colorado, united states", "milwaukee, wisconsin, united states", "baltimore, maryland, united states", "kansas city, missouri, united states", "indianapolis, indiana, united states", "nashville, tennessee, united states", "boston, massachusetts, united states", "phoenix, arizona, united states", "seattle, washington, united states", "virginia beach, virginia, united states", "newark, new jersey, united states", "detroit, michigan, united states", "charlotte, north carolina, united states", "atlanta, georgia, united states", "columbus, ohio, united states", "chicago, illinois, united states", "philadelphia, pennsylvania, united states", "new york city, new york, united states", "jacksonville, florida, united states"], help="Select the location for your search. Example: 'Los Angeles, California, United States'")
 gl = st.selectbox("Select country code:", ["us", "ca", "au"], help="Select the 2-letter country code. Example: 'US' for the United States.")
 device = st.selectbox("Select device:", ["desktop", "tablet", "mobile"], help="Choose the type of device to simulate the search on. This affects how search results are fetched.")
 
@@ -155,58 +141,56 @@ if uploaded_file is not None:
 else:
     EXCEL_PATH = os.getcwd() + '/src/serpratingtest.xlsx'
 
-if query != "" and SERP_API_KEY != "":
-    if st.button("Calculate SERP Rating Score"):
-        serp_data = get_serp_data(query, location, gl, device)
-        organic_results = serp_data.get('organic_results', [])
+if queries and SERP_API_KEY:
+    if st.button("Calculate SERP Rating Scores"):
+        for query in queries:
+            query = query.strip()  # Trim whitespace
+            if query:  # Check if the query is not empty
+                with st.container():  # Use a container to group each query's results
+                    st.subheader(f"Results for: {query}")
+                    serp_data = get_serp_data(query, location, gl, device)
+                    organic_results = serp_data.get('organic_results', [])
 
-        domain_info_df = load_domain_info(EXCEL_PATH)
-        classified_organic_results = classify_urls(organic_results, domain_info_df)
-        final_results = assign_numbers_and_calculate_transformed(classified_organic_results)
+                    domain_info_df = load_domain_info(EXCEL_PATH)
+                    classified_organic_results = classify_urls(organic_results, domain_info_df)
+                    final_results = assign_numbers_and_calculate_transformed(classified_organic_results)
 
-        sections_info = extract_links_and_count_sections(serp_data)
-        serp_rating_score = calculate_serp_rating(final_results, sections_info) * 2
+                    sections_info = extract_links_and_count_sections(serp_data)
+                    serp_rating_score = calculate_serp_rating(final_results, sections_info) * 2
 
-        # Scaling SERP Rating Score to CliQ KD
-        cliq_kd = (serp_rating_score - 41.2) / (101.3 - 41.2) * 100
+                    # Scaling SERP Rating Score to CliQ KD
+                    cliq_kd = (serp_rating_score - 41.2) / (101.3 - 41.2) * 100
 
-        # Display CliQ KD with color
-        cliq_kd_color_message = get_cliQ_kd_color_message(cliq_kd)
-        st.markdown(f"CliQ KD for '{query}' in {location}: {cliq_kd_color_message}", unsafe_allow_html=True)
-        
-        cliq_kd_message = get_cliQ_kd_message(cliq_kd)
-        st.subheader(cliq_kd_message)
-        
-        st.divider()
-
-        # Improved Summary Section
-        st.header("Summary")
-        with st.expander("See summary", expanded=True):
-            # Displaying organic results details in a more visually appealing format
-            all_results = []
-            for result in final_results[:10]:
-                all_results.append({
-                    "Position": result['position'], 
-                    "URL": result.get('link', 'URL not available'), 
-                    "Regulation": result['Regulation'],
-                    "Class": result['Class']
-                })
-            results_table = pd.DataFrame(all_results)
-            # Assuming `results_table` is your DataFrame
-            markdown_table = "Position | URL | Regulation | Class\n--- | --- | --- | ---\n"
-            for _, row in results_table.iterrows():
-                markdown_table += f"{row['Position']} | [{row['URL']}]({row['URL']}) | {row['Regulation']} | {row['Class']}\n"
-            
-            st.markdown(markdown_table, unsafe_allow_html=True)
-        
-            # Enhanced Counts and Links Display
-            st.subheader("Ads and SERP Features:")
-            for section, info in sections_info.items():
-                # Use the LABEL_MAPPING to get the preferred label
-                display_label = LABEL_MAPPING.get(section, section.capitalize())
-                st.markdown(f"**{display_label} Count:** {info['count']}")
-                if info["links"]:
-                    st.markdown(f"**{display_label} Links:**")
-                    for link in info["links"]:
-                        # Using Markdown to display links as clickable URLs
-                        st.markdown(f"- [{link}]({link})", unsafe_allow_html=True)
+                    # Display CliQ KD with color
+                    cliq_kd_color_message = get_cliQ_kd_color_message(cliq_kd)
+                    st.markdown(f"CliQ KD for '{query}' in {location}: {cliq_kd_color_message}", unsafe_allow_html=True)
+                    
+                    # Improved Summary Section
+                    st.header("Summary for: " + query)
+                    with st.expander("See summary", expanded=True):
+                        # Displaying organic results details in a more visually appealing format
+                        all_results = []
+                        for result in final_results[:10]:
+                            all_results.append({
+                                "Position": result['position'], 
+                                "URL": result.get('link', 'URL not available'), 
+                                "Regulation": result['Regulation'],
+                                "Class": result['Class']
+                            })
+                        results_table = pd.DataFrame(all_results)
+                        markdown_table = "Position | URL | Regulation | Class\n--- | --- | --- | ---\n"
+                        for _, row in results_table.iterrows():
+                            markdown_table += f"{row['Position']} | [{row['URL']}]({row['URL']}) | {row['Regulation']} | {row['Class']}\n"
+                        st.markdown(markdown_table, unsafe_allow_html=True)
+                        
+                        # Enhanced Counts and Links Display
+                        st.subheader("Ads and SERP Features:")
+                        for section, info in sections_info.items():
+                            # Use the LABEL_MAPPING to get the preferred label
+                            display_label = LABEL_MAPPING.get(section, section.capitalize())
+                            st.markdown(f"**{display_label} Count:** {info['count']}")
+                            if info["links"]:
+                                st.markdown(f"**{display_label} Links:**")
+                                for link in info["links"]:
+                                    # Using Markdown to display links as clickable URLs
+                                    st.markdown(f"- [{link}]({link})", unsafe_allow_html=True)
