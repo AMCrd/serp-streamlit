@@ -168,7 +168,7 @@ if query != "" and SERP_API_KEY != "":
         serp_rating_score = calculate_serp_rating(final_results, sections_info) * 2
 
         # Scaling SERP Rating Score to CliQ KD
-        cliq_kd = (serp_rating_score - 41.2) / (100.3 - 41.2) * 100
+        cliq_kd = (serp_rating_score - 41.2) / (101.3 - 41.2) * 100
 
         # Display CliQ KD with color
         cliq_kd_color_message = get_cliQ_kd_color_message(cliq_kd)
