@@ -3,8 +3,6 @@ import requests
 import pandas as pd
 from urllib.parse import urlparse
 import os
-import matplotlib.pyplot as plt
-
 
 # Constants and Configurations
 SERP_BASE_URL = "https://serpapi.com/search"
@@ -188,24 +186,6 @@ if queries and SERP_API_KEY:
                         for _, row in results_table.iterrows():
                             markdown_table += f"{row['Position']} | [{row['URL']}]({row['URL']}) | {row['Regulation']} | {row['Class']}\n"
                         st.markdown(markdown_table, unsafe_allow_html=True)
-
-                        # Count the occurrences of each 'Regulation' category
-                        regulation_counts = final_results['Regulation'].value_counts()
-
-                        # Filter for only 'Unregulated' and 'Publisher' categories
-                        filtered_counts = regulation_counts.loc[regulation_counts.index.isin(['Unregulated', 'Publisher'])]
-
-                        # If you want to include all categories and not just 'Unregulated' and 'Publisher', skip the above line
-                        # filtered_counts = regulation_counts
-
-                        # Generating the pie chart
-                        fig, ax = plt.subplots()
-                        ax.pie(filtered_counts, labels=filtered_counts.index, autopct='%1.1f%%', startangle=90, colors=['#66b3ff', '#99ff99', '#ffcc99'])
-                        ax.axis('equal')  # Equal aspect ratio ensures the pie chart is circular.
-
-                        # Display the pie chart
-                        st.pyplot(fig)
-
                         
                         # Enhanced Counts and Links Display
                         st.subheader("Ads and SERP Features:")
