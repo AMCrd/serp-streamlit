@@ -141,12 +141,17 @@ if uploaded_file is not None:
 else:
     EXCEL_PATH = os.getcwd() + '/src/serpratingtest.xlsx'
 
+# Continue from the previous snippet, assuming previous sections remain unchanged
 if queries and SERP_API_KEY:
     if st.button("Calculate SERP Rating Scores"):
+        col1, col2 = st.columns(2)  # Define two columns for the layout
+        current_col = 0  # This will help us alternate between columns
+        
         for query in queries:
             query = query.strip()  # Trim whitespace
             if query:  # Check if the query is not empty
-                with st.container():  # Use a container to group each query's results
+                # Alternate columns for each keyword's output
+                with (col1 if current_col % 2 == 0 else col2):
                     st.subheader(f"Results for: {query}")
                     serp_data = get_serp_data(query, location, gl, device)
                     organic_results = serp_data.get('organic_results', [])
@@ -166,8 +171,7 @@ if queries and SERP_API_KEY:
                     st.markdown(f"CliQ KD for '{query}' in {location}: {cliq_kd_color_message}", unsafe_allow_html=True)
                     
                     # Improved Summary Section
-                    st.header("Summary for: " + query)
-                    with st.expander("See summary", expanded=True):
+                    with st.expander("See summary", expanded=False):
                         # Displaying organic results details in a more visually appealing format
                         all_results = []
                         for result in final_results[:10]:
@@ -186,11 +190,11 @@ if queries and SERP_API_KEY:
                         # Enhanced Counts and Links Display
                         st.subheader("Ads and SERP Features:")
                         for section, info in sections_info.items():
-                            # Use the LABEL_MAPPING to get the preferred label
                             display_label = LABEL_MAPPING.get(section, section.capitalize())
                             st.markdown(f"**{display_label} Count:** {info['count']}")
                             if info["links"]:
                                 st.markdown(f"**{display_label} Links:**")
                                 for link in info["links"]:
-                                    # Using Markdown to display links as clickable URLs
                                     st.markdown(f"- [{link}]({link})", unsafe_allow_html=True)
+
+                current_col += 1  # Move to the next column for the next keyword
