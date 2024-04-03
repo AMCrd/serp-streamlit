@@ -4,6 +4,26 @@ import pandas as pd
 from urllib.parse import urlparse
 import os
 
+# Defines password 
+PASSWORD = 'serprating123'
+
+def main():
+    # Your existing Streamlit app code
+    
+    # Example of app content
+    st.title("Secure Streamlit App")
+    # Add more of your app's functionality here
+
+# Create a password input field where the user can enter a password
+password = st.text_input("Enter Password", type="password")
+
+# Check if the password is correct
+if password == PASSWORD:
+    st.success("Password is correct. Welcome to the app!")
+    main()  # Call the main function containing your app
+else:
+    st.error("Password is incorrect. Please try again.")
+
 # Constants and Configurations
 SERP_BASE_URL = "https://serpapi.com/search"
 
