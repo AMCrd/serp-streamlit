@@ -14,16 +14,6 @@ def main():
     st.title("Secure Streamlit App")
     # Add more of your app's functionality here
 
-# Create a password input field where the user can enter a password
-password = st.text_input("Enter Password", type="password")
-
-# Check if the password is correct
-if password == PASSWORD:
-    st.success("Password is correct. Welcome to the app!")
-    main()  # Call the main function containing your app
-else:
-    st.error("Password is incorrect. Please try again.")
-
 # Constants and Configurations
 SERP_BASE_URL = "https://serpapi.com/search"
 
@@ -140,6 +130,16 @@ def calculate_serp_rating(final_results, sections_info):
     return serp_rating
 
 # Streamlit UI components setup
+# Create a password input field where the user can enter a password
+password = st.text_input("Enter Password", type="password")
+
+# Check if the password is correct
+if password == PASSWORD:
+    st.success("Password is correct. Welcome to the app!")
+    main()  # Call the main function containing your app
+else:
+    st.error("Password is incorrect. Please try again.")
+    
 st.set_page_config(layout="wide")
 uploaded_file = st.file_uploader("Upload a file", type=["xlsx"], help="Upload the Excel file if Domains aren't tagged correctly")
 SERP_API_KEY = st.text_input("Enter the API key:", "", help="Enter your SERP API key. You can find this in your SERP API dashboard.")
