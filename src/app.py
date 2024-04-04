@@ -199,7 +199,7 @@ if queries and SERP_API_KEY:
 
                 current_col += 1  # Move to the next column for the next keyword
 # Password protection setup
-PASSWORD = 'your_password_here'  # Consider using environment variables for production
+PASSWORD = 'serprating123'  # Consider using environment variables for production
 password = st.text_input("Enter Password", type="password")
 
 if password == PASSWORD:
