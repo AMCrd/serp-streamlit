@@ -124,7 +124,7 @@ st.set_page_config(layout="wide")
 uploaded_file = st.file_uploader("Upload a file", type=["xlsx"], help="Upload the Excel file if Domains aren't tagged correctly")
 SERP_API_KEY = st.text_input("Enter the API key:", "", help="Enter your SERP API key. You can find this in your SERP API dashboard.")
 
-# New: Allow multiple queries input
+# Allow multiple queries input
 queries_input = st.text_area("Enter up to 5 search queries, separated by a newline:", "", help="Enter the search terms you want to analyze, one per line. Example: 'best online casinos\nonline gambling sites'.")
 queries = queries_input.strip().split('\n')[:5]  # Split by newline and take up to 5 queries
 
@@ -141,11 +141,11 @@ if uploaded_file is not None:
 else:
     EXCEL_PATH = os.getcwd() + '/src/serpratingtest.xlsx'
 
-# Continue from the previous snippet, assuming previous sections remain unchanged
+# Continue from the previous function, assuming previous sections remain unchanged
 if queries and SERP_API_KEY:
     if st.button("Calculate SERP Rating Scores"):
-        col1, col2 = st.columns(2)  # Define two columns for the layout
-        current_col = 0  # This will help us alternate between columns
+        col1, col2 = st.columns(2)  # Defines two columns for the layout
+        current_col = 0  # Helps alternate between columns
         
         for query in queries:
             query = query.strip()  # Trim whitespace
@@ -166,13 +166,13 @@ if queries and SERP_API_KEY:
                     # Scaling SERP Rating Score to CliQ KD
                     cliq_kd = (serp_rating_score - 41.2) / (101.3 - 41.2) * 100
 
-                    # Display CliQ KD with color
+                    # Display CliQ KD color based on range
                     cliq_kd_color_message = get_cliQ_kd_color_message(cliq_kd)
                     st.markdown(f"CliQ KD for '{query}' in {location}: {cliq_kd_color_message}", unsafe_allow_html=True)
                     
-                    # Improved Summary Section
+                    # Summary Section
                     with st.expander("See summary", expanded=False):
-                        # Displaying organic results details in a more visually appealing format
+                        # Displaying organic results 
                         all_results = []
                         for result in final_results[:10]:
                             all_results.append({
