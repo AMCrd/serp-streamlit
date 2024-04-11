@@ -3,15 +3,18 @@ import requests
 import pandas as pd
 from urllib.parse import urlparse
 import os
-from collections import Counter
 
 # Constants and Configurations
 SERP_BASE_URL = "https://serpapi.com/search"
+
 POSITION_MULTIPLIERS = {
     1: 5, 2: 4, 3: 3, 4: 1.5, 5: 1.4,
     6: 1.3, 7: 1.2, 8: 1.1, 9: 1.05, 10: 1.05,
 }
+
+# Alternative POSITION_MULTIPLIERS are identical in this version
 ALTERNATIVE_POSITION_MULTIPLIERS = POSITION_MULTIPLIERS
+
 LABEL_MAPPING = {
     "ads": "Sponsored Ads",
     "related_questions": "People Also Ask",
@@ -121,13 +124,13 @@ st.set_page_config(layout="wide")
 uploaded_file = st.file_uploader("Upload a file", type=["xlsx"], help="Upload the Excel file if Domains aren't tagged correctly")
 SERP_API_KEY = st.text_input("Enter the API key:", "", help="Enter your SERP API key. You can find this in your SERP API dashboard.")
 
-# Allow multiple queries input
+# Allow multiple queries input up ot 5 - all using the same regional parameter
 queries_input = st.text_area("Enter up to 5 search queries, separated by a newline:", "", help="Enter the search terms you want to analyze, one per line. Example: 'best online casinos\nonline gambling sites'.")
-queries = queries_input.strip().split('\n')[:5]
+queries = queries_input.strip().split('\n')[:5]  # Split by newline and take up to 5 queries
 
-location = st.selectbox("Select location:", ["los angeles, california, united states", "houston, texas, united states", "denver, colorado, united states", "milwaukee, wisconsin, united states", "baltimore, maryland, united states", "kansas city, missouri, united states", "indianapolis, indiana, united states", "nashville, tennessee, united states", "boston, massachusetts, united states", "phoenix, arizona, united states", "seattle, washington, united states", "virginia beach, virginia, united states", "newark, new jersey, united states", "detroit, michigan, united states", "charlotte, north carolina, united states", "atlanta, georgia, united states", "columbus, ohio, united states", "chicago, illinois, united states", "philadelphia, pennsylvania, united states", "new york city, new york, united states", "jacksonville, florida, united states"])
-gl = st.selectbox("Select country code:", ["us", "ca", "au"])
-device = st.selectbox("Select device:", ["desktop", "tablet", "mobile"])
+location = st.selectbox("Select location:", ["los angeles, california, united states", "houston, texas, united states", "denver, colorado, united states", "milwaukee, wisconsin, united states", "baltimore, maryland, united states", "kansas city, missouri, united states", "indianapolis, indiana, united states", "nashville, tennessee, united states", "boston, massachusetts, united states", "phoenix, arizona, united states", "seattle, washington, united states", "virginia beach, virginia, united states", "newark, new jersey, united states", "detroit, michigan, united states", "charlotte, north carolina, united states", "atlanta, georgia, united states", "columbus, ohio, united states", "chicago, illinois, united states", "philadelphia, pennsylvania, united states", "new york city, new york, united states", "jacksonville, florida, united states"], help="Select the location for your search. Example: 'Los Angeles, California, United States'")
+gl = st.selectbox("Select country code:", ["us", "ca", "au"], help="Select the 2-letter country code. Example: 'US' for the United States.")
+device = st.selectbox("Select device:", ["desktop", "tablet", "mobile"], help="Choose the type of device to simulate the search on. This affects how search results are fetched.")
 
 if uploaded_file is not None:
     EXCEL_PATH = os.getcwd() + "/src/serprating.xlsx"
@@ -138,64 +141,60 @@ if uploaded_file is not None:
 else:
     EXCEL_PATH = os.getcwd() + '/src/serpratingtest.xlsx'
 
+# Continue from the previous function, assuming previous sections remain unchanged
 if queries and SERP_API_KEY:
     if st.button("Calculate SERP Rating Scores"):
-        col1, col2 = st.columns(2)
-        current_col = 0
+        col1, col2 = st.columns(2)  # Defines two columns for the layout
+        current_col = 0  # Helps alternate between columns
         
-        domain_info_df = load_domain_info(EXCEL_PATH)
-
         for query in queries:
-            query = query.strip()
-            if query:
+            query = query.strip()  # Trim whitespace
+            if query:  # Check if the query is not empty
+                # Alternate columns for each keyword's output
                 with (col1 if current_col % 2 == 0 else col2):
                     st.subheader(f"Results for: {query}")
                     serp_data = get_serp_data(query, location, gl, device)
                     organic_results = serp_data.get('organic_results', [])
+
+                    domain_info_df = load_domain_info(EXCEL_PATH)
                     classified_organic_results = classify_urls(organic_results, domain_info_df)
-
-                    # Overview Analysis
-                    regulations = [result['Regulation'] for result in classified_organic_results]
-                    classes = [result['Class'] for result in classified_organic_results]
-                    
-                    regulation_counts = Counter(regulations)
-                    total_regulations = sum(regulation_counts.values())
-                    regulation_percentages = {reg: (count / total_regulations * 100) for reg, count in regulation_counts.items()}
-                    
-                    class_counts = Counter(classes)
-                    
-                    regulation_df = pd.DataFrame(list(regulation_percentages.items()), columns=['Regulation', 'Percentage'])
-                    regulation_df['Percentage'] = regulation_df['Percentage'].apply(lambda x: f"{x:.2f}%")
-                    
-                    class_ratios_df = pd.DataFrame(list(class_counts.items()), columns=['Class', 'Count'])
-                    
-                    st.markdown("### Regulation Overview")
-                    st.dataframe(regulation_df.style.hide_index())
-                    
-                    st.markdown("### Class Ratios")
-                    st.dataframe(class_ratios_df.style.hide_index())
-
                     final_results = assign_numbers_and_calculate_transformed(classified_organic_results)
+
                     sections_info = extract_links_and_count_sections(serp_data)
                     serp_rating_score = calculate_serp_rating(final_results, sections_info) * 2
+
+                    # Scaling SERP Rating Score to CliQ KD
                     cliq_kd = (serp_rating_score - 41.2) / (101.3 - 41.2) * 100
+
+                    # Display CliQ KD color based on range
                     cliq_kd_color_message = get_cliQ_kd_color_message(cliq_kd)
                     st.markdown(f"CliQ KD for '{query}' in {location}: {cliq_kd_color_message}", unsafe_allow_html=True)
-
+                    
                     # Summary Section
-                    with st.expander("See Detailed Results", expanded=False):
-                        st.markdown("### Top Organic Results")
-                        results_df = pd.DataFrame(final_results[:10], columns=['Position', 'link', 'Regulation', 'Class'])
-                        results_df.rename(columns={'link': 'URL'}, inplace=True)
-                        st.dataframe(results_df)
-
-                        st.markdown("### SERP Features Overview")
+                    with st.expander("See summary", expanded=False):
+                        # Displaying organic results 
+                        all_results = []
+                        for result in final_results[:10]:
+                            all_results.append({
+                                "Position": result['position'], 
+                                "URL": result.get('link', 'URL not available'), 
+                                "Regulation": result['Regulation'],
+                                "Class": result['Class']
+                            })
+                        results_table = pd.DataFrame(all_results)
+                        markdown_table = "Position | URL | Regulation | Class\n--- | --- | --- | ---\n"
+                        for _, row in results_table.iterrows():
+                            markdown_table += f"{row['Position']} | [{row['URL']}]({row['URL']}) | {row['Regulation']} | {row['Class']}\n"
+                        st.markdown(markdown_table, unsafe_allow_html=True)
+                        
+                        # Enhanced Counts and Links Display
+                        st.subheader("Ads and SERP Features:")
                         for section, info in sections_info.items():
                             display_label = LABEL_MAPPING.get(section, section.capitalize())
                             st.markdown(f"**{display_label} Count:** {info['count']}")
                             if info["links"]:
                                 st.markdown(f"**{display_label} Links:**")
                                 for link in info["links"]:
-                                    st.markdown(f"- {link}")
+                                    st.markdown(f"- [{link}]({link})", unsafe_allow_html=True)
 
-                current_col += 1
+                current_col += 1  # Move to the next column for the next keyword
