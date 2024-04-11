@@ -20,8 +20,101 @@ LABEL_MAPPING = {
     "knowledge_graph": "Knowledge Graph"
 }
 
-# Function Definitions
-# Assuming all your function definitions here (e.g., get_serp_data, load_domain_info, etc.)
+def get_cliQ_kd_color_message(cliQ_kd):
+    if 0 <= cliQ_kd <= 20:
+        color = "green"
+    elif 21 <= cliQ_kd <= 40:
+        color = "lightgreen"
+    elif 41 <= cliQ_kd <= 60:
+        color = "yellow"
+    elif 61 <= cliQ_kd <= 80:
+        color = "orange"
+    elif 81 <= cliQ_kd <= 100:
+        color = "red"
+    else:
+        color = "white"  
+    return f"<span style='color: {color}; font-size: 24px;'>{cliQ_kd:.2f}</span>"
+
+def get_serp_data(query, location, gl, device):
+    params = {
+        "api_key": SERP_API_KEY,
+        "engine": "google",
+        "q": query,
+        "location": location,
+        "hl": "en",
+        "gl": gl,
+        "device": device,
+        "num": 20,
+    }
+    response = requests.get(SERP_BASE_URL, params=params)
+    response.raise_for_status()
+    return response.json()
+
+def load_domain_info(excel_path):
+    df = pd.read_excel(excel_path, engine='openpyxl')
+    df['Domain'] = df['Domain'].str.lower().str.replace('www.', '')
+    return df
+
+def classify_urls(organic_results, domain_info_df):
+    for result in organic_results:
+        domain = urlparse(result['link']).netloc.lower().replace('www.', '')
+        matching_info = domain_info_df[domain_info_df['Domain'] == domain]
+        if not matching_info.empty:
+            result['Regulation'] = matching_info.iloc[0]['Regulation']
+            result['Class'] = matching_info.iloc[0]['Class']
+        else:
+            result['Regulation'] = 'Other'
+            result['Class'] = 'Other'
+    return organic_results
+
+def assign_numbers_and_calculate_transformed(final_results):
+    class_to_number = {"Publisher": 1, "Parasite": 2, "UGC": 2, "Operator": 2, "News": 2, "Apps": 2, "Social": 2, "Other": 1}
+    regulation_to_number = {"Regulated": 2, "Unregulated": 1, "Other": 1}
+    for result in final_results:
+        result['Class_Num'] = class_to_number.get(result.get('Class', 'Other'), 0)
+        result['Regulation_Num'] = regulation_to_number.get(result.get('Regulation', 'Other'), 0)
+        result['Transformed'] = (result['Class_Num'] + result['Regulation_Num']) / 2
+    return final_results
+
+def extract_links_and_count_sections(serp_data):
+    sections_info = {
+        "ads": {"count": 0, "links": []},
+        "related_questions": {"count": 0, "links": []},
+        "answer_box": {"count": 0, "links": []},
+        "discussions_and_forums": {"count": 0, "links": []},
+        "knowledge_graph": {"count": 0, "links": []}
+    }
+    for section in sections_info:
+        if section in serp_data:
+            if isinstance(serp_data[section], list):
+                for item in serp_data[section]:
+                    sections_info[section]["links"].append(item.get("link", "No link"))
+                sections_info[section]["count"] = len(sections_info[section]["links"])
+            elif isinstance(serp_data[section], dict) and section == "knowledge_graph":
+                sections_info[section]["count"] = 1
+    return sections_info
+
+def calculate_serp_rating(final_results, sections_info):
+    if sections_info['ads']['count'] == 0:
+        current_multipliers = ALTERNATIVE_POSITION_MULTIPLIERS
+    else:
+        current_multipliers = POSITION_MULTIPLIERS
+    
+    serp_rating = sum([
+        sections_info['ads']['count'] * 2,
+        sections_info['related_questions']['count'] * 1.05,
+        sections_info['answer_box']['count'] * 1,
+        sections_info['discussions_and_forums']['count'] * 1.05,
+        sections_info['knowledge_graph']['count'] * 1
+    ])
+    
+    for result in final_results[:10]:
+        position = result['position']
+        transformed_value = result['Transformed']
+        multiplier = current_multipliers.get(position, 1)
+        serp_rating += transformed_value * multiplier
+    
+    return serp_rating
 
 # Streamlit UI components setup
 st.set_page_config(layout="wide")
