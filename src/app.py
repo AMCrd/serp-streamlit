@@ -121,6 +121,28 @@ def calculate_serp_rating(final_results, sections_info):
 
 # Streamlit UI components setup
 st.set_page_config(layout="wide")
+# Define custom CSS to make tables more responsive
+custom_css = """
+<style>
+    .stMarkdown table {
+        table-layout: fixed;
+        width: 100%;
+    }
+    .stMarkdown table td, .stMarkdown table th {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        max-width: 130px;  # Adjust based on your content and column width
+        font-size: 0.8em;  # Smaller font size for better fit
+    }
+    .stMarkdown table th {
+        max-width: 100px;  # Headers can often be narrower
+    }
+</style>
+"""
+
+# Inject custom CSS
+st.markdown(custom_css, unsafe_allow_html=True)
+
 uploaded_file = st.file_uploader("Upload a file", type=["xlsx"], help="Upload the Excel file if Domains aren't tagged correctly")
 SERP_API_KEY = st.text_input("Enter the API key:", "", help="Enter your SERP API key. You can find this in your SERP API dashboard.")
 
