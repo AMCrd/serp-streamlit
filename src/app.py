@@ -4,7 +4,7 @@ import pandas as pd
 from urllib.parse import urlparse
 import os
 
-# Constants and Configurations
+# Constants and Configuration
 SERP_BASE_URL = "https://serpapi.com/search"
 
 POSITION_MULTIPLIERS = {
