@@ -36,6 +36,20 @@ def get_cliQ_kd_color_message(cliQ_kd):
         color = "white"  
     return f"<span style='color: {color}; font-size: 24px;'>{cliQ_kd:.2f}</span>"
 
+def get_cliQ_kd_message(cliQ_kd):
+    if 0 <= cliQ_kd <= 20:
+        return "Very low difficulty; should highly consider in planning and execution :sunglasses:"
+    elif 21 <= cliQ_kd <= 40:
+        return "Low difficulty; should consider in planning and execution :grinning:"
+    elif 41 <= cliQ_kd <= 60:
+        return "Medium difficulty; possible to consider in planning and execution :relieved:"
+    elif 61 <= cliQ_kd <= 80:
+        return "High difficulty; debatable to consider in planning and execution :neutral_face:"
+    elif 81 <= cliQ_kd <= 100:
+        return "Very high difficulty; do not consider in planning and execution :unamused:"
+    else:
+        return "Invalid CliQ KD range"
+
 def get_serp_data(query, location, gl, device):
     params = {
         "api_key": SERP_API_KEY,
@@ -199,6 +213,8 @@ if queries and SERP_API_KEY:
                     # Display CliQ KD color based on range
                     cliq_kd_color_message = get_cliQ_kd_color_message(cliq_kd)
                     st.markdown(f"CliQ KD for '{query}' in {location}: {cliq_kd_color_message}", unsafe_allow_html=True)
+                    cliq_kd_message = get_cliQ_kd_message(cliq_kd)
+                    st.subheader(cliq_kd_message)
                     
                     # Summary Section
                     with st.expander("See summary", expanded=False):
