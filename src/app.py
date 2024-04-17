@@ -123,8 +123,6 @@ def to_excel(df):
     try:
         with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
             df.to_excel(writer, sheet_name='Sheet1', index=False)
-            writer.handle_exceptions = False  # Ensure any exceptions are propagated up.
-            writer.save()
         processed_data = output.getvalue()
         return processed_data
     except Exception as e:
