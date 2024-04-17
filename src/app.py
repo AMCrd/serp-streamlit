@@ -6,6 +6,39 @@ import os
 import base64
 from io import BytesIO
 
+# Function to inject custom CSS
+def set_custom_css():
+    css_style = """
+    <style>
+        .stExpander {
+            overflow-x: auto;
+            word-wrap: break-word;
+        }
+        .stMarkdown {
+            max-width: 100%;
+            table {
+                table-layout: fixed;
+                width: 100%;
+            }
+            th, td {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+        }
+    </style>
+    """
+    st.markdown(css_style, unsafe_allow_html=True)
+
+# Apply the CSS
+set_custom_css()
+
+# Function to format DataFrame entries, particularly URLs
+def format_dataframe(df):
+    # Truncate strings and add ellipsis if necessary
+    df['URL'] = df['URL'].apply(lambda x: (x[:30] + '...') if len(x) > 30 else x)
+    return df
+
 # Constants and Configuration
 SERP_BASE_URL = "https://serpapi.com/search"
 POSITION_MULTIPLIERS = {
@@ -196,38 +229,42 @@ if queries and SERP_API_KEY:
 
                     # Display CliQ KD color based on range
                     cliq_kd_color_message = get_cliQ_kd_color_message(cliq_kd)
-                    st.markdown(f"CliQ KD for '{query}' in {location}: {cliq_kd_color_message}", unsafe_allow_html=True)
-                    
-                    # Summary Section
                     with st.expander("See summary", expanded=False):
-                        # Displaying organic results 
-                        all_results = []
-                        for result in final_results[:10]:
-                            all_results.append({
-                                "Position": result['position'], 
-                                "URL": result.get('link', 'URL not available'), 
-                                "Regulation": result['Regulation'],
-                                "Class": result['Class']
-                            })
-                        results_table = pd.DataFrame(all_results)
-                        markdown_table = "Position | URL | Regulation | Class\n--- | --- | --- | ---\n"
-                        for _, row in results_table.iterrows():
-                            markdown_table += f"{row['Position']} | [{row['URL']}]({row['URL']}) | {row['Regulation']} | {row['Class']}\n"
-                        st.markdown(markdown_table, unsafe_allow_html=True)
+                        all_results = format_dataframe(pd.DataFrame(final_results[:10]))
+                        st.dataframe(all_results)  # Display the DataFrame with formatted data
+                        # More display logic can continue here...
+                        st.markdown(f"CliQ KD for '{query}' in {location}: {cliq_kd_color_message}", unsafe_allow_html=True)
                         
-                        # Download links
-                        st.markdown(get_table_download_link(results_table), unsafe_allow_html=True)
-                        st.markdown(get_excel_download_link(results_table), unsafe_allow_html=True)
-
-                        # Enhanced Counts and Links Display
-                        st.subheader("Ads and SERP Features:")
-                        for section, info in sections_info.items():
-                            display_label = LABEL_MAPPING.get(section, section.capitalize())
-                            st.markdown(f"**{display_label} Count:** {info['count']}")
-                            if info["links"]:
-                                st.markdown(f"**{display_label} Links:**")
-                                for link in info["links"]:
-                                    st.markdown(f"- [{link}]({link})", unsafe_allow_html=True)
-
-                current_col += 1  # Move to the next column for the next keyword
-
+                        # Summary Section
+                        with st.expander("See summary", expanded=False):
+                            # Displaying organic results 
+                            all_results = []
+                            for result in final_results[:10]:
+                                all_results.append({
+                                    "Position": result['position'], 
+                                    "URL": result.get('link', 'URL not available'), 
+                                    "Regulation": result['Regulation'],
+                                    "Class": result['Class']
+                                })
+                            results_table = pd.DataFrame(all_results)
+                            markdown_table = "Position | URL | Regulation | Class\n--- | --- | --- | ---\n"
+                            for _, row in results_table.iterrows():
+                                markdown_table += f"{row['Position']} | [{row['URL']}]({row['URL']}) | {row['Regulation']} | {row['Class']}\n"
+                            st.markdown(markdown_table, unsafe_allow_html=True)
+                            
+                            # Download links
+                            st.markdown(get_table_download_link(results_table), unsafe_allow_html=True)
+                            st.markdown(get_excel_download_link(results_table), unsafe_allow_html=True)
+    
+                            # Enhanced Counts and Links Display
+                            st.subheader("Ads and SERP Features:")
+                            for section, info in sections_info.items():
+                                display_label = LABEL_MAPPING.get(section, section.capitalize())
+                                st.markdown(f"**{display_label} Count:** {info['count']}")
+                                if info["links"]:
+                                    st.markdown(f"**{display_label} Links:**")
+                                    for link in info["links"]:
+                                        st.markdown(f"- [{link}]({link})", unsafe_allow_html=True)
+    
+                    current_col += 1  # Move to the next column for the next keyword
+    
