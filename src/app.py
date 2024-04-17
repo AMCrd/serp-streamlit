@@ -1,20 +1,18 @@
 import streamlit as st
-import requests
 import pandas as pd
+import requests
 from urllib.parse import urlparse
 import os
+import base64
+from io import BytesIO
 
 # Constants and Configuration
 SERP_BASE_URL = "https://serpapi.com/search"
-
 POSITION_MULTIPLIERS = {
     1: 5, 2: 4, 3: 3, 4: 1.5, 5: 1.4,
     6: 1.3, 7: 1.2, 8: 1.1, 9: 1.05, 10: 1.05,
 }
-
-# Alternative POSITION_MULTIPLIERS are identical in this version
 ALTERNATIVE_POSITION_MULTIPLIERS = POSITION_MULTIPLIERS
-
 LABEL_MAPPING = {
     "ads": "Sponsored Ads",
     "related_questions": "People Also Ask",
@@ -119,12 +117,33 @@ def calculate_serp_rating(final_results, sections_info):
     
     return serp_rating
 
+# Functions to handle download links
+def to_excel(df):
+    output = BytesIO()
+    writer = pd.ExcelWriter(output, engine='xlsxwriter')
+    df.to_excel(writer, index=False, sheet_name='Sheet1')
+    writer.save()
+    processed_data = output.getvalue()
+    return processed_data
+
+def get_table_download_link(df):
+    csv = df.to_csv(index=False)
+    b64 = base64.b64encode(csv.encode()).decode()
+    href = f'<a href="data:file/csv;base64,{b64}" download="table.csv">Download CSV</a>'
+    return href
+
+def get_excel_download_link(df):
+    val = to_excel(df)
+    b64 = base64.b64encode(val).decode()
+    href = f'<a href="data:application/octet-stream;base64,{b64}" download="table.xlsx">Download Excel</a>'
+    return href
+
 # Streamlit UI components setup
 st.set_page_config(layout="wide")
 uploaded_file = st.file_uploader("Upload a file", type=["xlsx"], help="Upload the Excel file if Domains aren't tagged correctly")
 SERP_API_KEY = st.text_input("Enter the API key:", "", help="Enter your SERP API key. You can find this in your SERP API dashboard.")
 
-# Allow multiple queries input up ot 5 - all using the same regional parameter
+# Allow multiple queries input up to 5 - all using the same regional parameter
 queries_input = st.text_area("Enter up to 5 search queries, separated by a newline:", "", help="Enter the search terms you want to analyze, one per line. Example: 'best online casinos\nonline gambling sites'.")
 queries = queries_input.strip().split('\n')[:5]  # Split by newline and take up to 5 queries
 
@@ -187,6 +206,10 @@ if queries and SERP_API_KEY:
                             markdown_table += f"{row['Position']} | [{row['URL']}]({row['URL']}) | {row['Regulation']} | {row['Class']}\n"
                         st.markdown(markdown_table, unsafe_allow_html=True)
                         
+                        # Download links
+                        st.markdown(get_table_download_link(results_table), unsafe_allow_html=True)
+                        st.markdown(get_excel_download_link(results_table), unsafe_allow_html=True)
+
                         # Enhanced Counts and Links Display
                         st.subheader("Ads and SERP Features:")
                         for section, info in sections_info.items():
