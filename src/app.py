@@ -163,17 +163,39 @@ if queries and SERP_API_KEY:
                     sections_info = extract_links_and_count_sections(serp_data)
                     serp_rating_score = calculate_serp_rating(final_results, sections_info) * 2
 
+                    # Scaling SERP Rating Score to CliQ KD
                     cliq_kd = (serp_rating_score - 41.2) / (101.3 - 41.2) * 100
+
+                    # Display CliQ KD color based on range
                     cliq_kd_color_message = get_cliQ_kd_color_message(cliq_kd)
                     st.markdown(f"CliQ KD for '{query}' in {location}: {cliq_kd_color_message}", unsafe_allow_html=True)
-
+                    
+                    # Summary Section
                     with st.expander("See summary", expanded=False):
-                        print(results_table.columns)  # Debug: Check what columns are available
-                        results_table = pd.DataFrame(final_results[:10])
-                        st.markdown("Position | URL | Regulation | Class\n--- | --- | --- | ---\n" + "\n".join(
-                            f"{row['Position']} | [{row['URL']}]({row['URL']}) | {row['Regulation']} | {row['Class']}" for _, row in results_table.iterrows()), unsafe_allow_html=True)
-
-                        csv = convert_df_to_csv(results_table)
-                        st.download_button("Download CSV", data=csv, file_name="serp_results.csv", mime="text/csv")
+                        # Displaying organic results 
+                        all_results = []
+                        for result in final_results[:10]:
+                            all_results.append({
+                                "Position": result['position'], 
+                                "URL": result.get('link', 'URL not available'), 
+                                "Regulation": result['Regulation'],
+                                "Class": result['Class']
+                            })
+                        results_table = pd.DataFrame(all_results)
+                        markdown_table = "Position | URL | Regulation | Class\n--- | --- | --- | ---\n"
+                        for _, row in results_table.iterrows():
+                            markdown_table += f"{row['Position']} | [{row['URL']}]({row['URL']}) | {row['Regulation']} | {row['Class']}\n"
+                        st.markdown(markdown_table, unsafe_allow_html=True)
+                        
+                        # Enhanced Counts and Links Display
+                        st.subheader("Ads and SERP Features:")
+                        for section, info in sections_info.items():
+                            display_label = LABEL_MAPPING.get(section, section.capitalize())
+                            st.markdown(f"**{display_label} Count:** {info['count']}")
+                            if info["links"]:
+                                st.markdown(f"**{display_label} Links:**")
+                                for link in info["links"]:
+                                    st.markdown(f"- [{link}]({link})", unsafe_allow_html=True)
 
                 current_col += 1  # Move to the next column for the next keyword
+
