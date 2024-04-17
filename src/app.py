@@ -1,18 +1,20 @@
 import streamlit as st
-import pandas as pd
 import requests
+import pandas as pd
 from urllib.parse import urlparse
 import os
-import base64
-from io import BytesIO
 
 # Constants and Configuration
 SERP_BASE_URL = "https://serpapi.com/search"
+
 POSITION_MULTIPLIERS = {
     1: 5, 2: 4, 3: 3, 4: 1.5, 5: 1.4,
     6: 1.3, 7: 1.2, 8: 1.1, 9: 1.05, 10: 1.05,
 }
+
+# Alternative POSITION_MULTIPLIERS are identical in this version
 ALTERNATIVE_POSITION_MULTIPLIERS = POSITION_MULTIPLIERS
+
 LABEL_MAPPING = {
     "ads": "Sponsored Ads",
     "related_questions": "People Also Ask",
@@ -36,20 +38,6 @@ def get_cliQ_kd_color_message(cliQ_kd):
         color = "white"  
     return f"<span style='color: {color}; font-size: 24px;'>{cliQ_kd:.2f}</span>"
 
-def get_cliQ_kd_message(cliQ_kd):
-    if 0 <= cliQ_kd <= 20:
-        return "Very low difficulty; should highly consider in planning and execution :sunglasses:"
-    elif 21 <= cliQ_kd <= 40:
-        return "Low difficulty; should consider in planning and execution :grinning:"
-    elif 41 <= cliQ_kd <= 60:
-        return "Medium difficulty; possible to consider in planning and execution :relieved:"
-    elif 61 <= cliQ_kd <= 80:
-        return "High difficulty; debatable to consider in planning and execution :neutral_face:"
-    elif 81 <= cliQ_kd <= 100:
-        return "Very high difficulty; do not consider in planning and execution :unamused:"
-    else:
-        return "Invalid CliQ KD range"
-
 def get_serp_data(query, location, gl, device):
     params = {
         "api_key": SERP_API_KEY,
@@ -66,17 +54,9 @@ def get_serp_data(query, location, gl, device):
     return response.json()
 
 def load_domain_info(excel_path):
-    if os.path.exists(excel_path):
-        return pd.read_excel(excel_path, engine='openpyxl')
-    else:
-        return pd.DataFrame(columns=['Domain', 'Regulation', 'Class'])  # Create empty DataFrame with expected columns
-
-def update_domain_info(uploaded_file, existing_file_path):
-    existing_df = load_domain_info(existing_file_path)
-    uploaded_df = pd.read_excel(uploaded_file, engine='openpyxl')
-    combined_df = pd.concat([existing_df, uploaded_df], ignore_index=True)
-    combined_df.drop_duplicates(subset='Domain', keep='last', inplace=True)
-    combined_df.to_excel(existing_file_path, index=False, engine='openpyxl')
+    df = pd.read_excel(excel_path, engine='openpyxl')
+    df['Domain'] = df['Domain'].str.lower().str.replace('www.', '')
+    return df
 
 def classify_urls(organic_results, domain_info_df):
     for result in organic_results:
@@ -139,46 +119,12 @@ def calculate_serp_rating(final_results, sections_info):
     
     return serp_rating
 
-def to_excel(df):
-    output = BytesIO()
-    try:
-        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-            df.to_excel(writer, sheet_name='Sheet1', index=False)
-        processed_data = output.getvalue()
-        return processed_data
-    except Exception as e:
-        st.error(f"Error in generating Excel file: {str(e)}")
-        return None
-
-def get_table_download_link(df):
-    csv = df.to_csv(index=False)
-    b64 = base64.b64encode(csv.encode()).decode()
-    href = f'<a href="data:file/csv;base64,{b64}" download="table.csv">Download CSV</a>'
-    return href
-
-def get_excel_download_link(df):
-    val = to_excel(df)
-    if val is None:
-        return "Error generating Excel file; please try again or check the logs for more details."
-    try:
-        b64 = base64.b64encode(val).decode()
-        href = f'<a href="data:application/octet-stream;base64,{b64}" download="table.xlsx">Download Excel</a>'
-        return href
-    except Exception as e:
-        st.error(f"Error encoding Excel data: {str(e)}")
-        return "Error preparing download link; please try again or check the logs for more details."
-
 # Streamlit UI components setup
 st.set_page_config(layout="wide")
 uploaded_file = st.file_uploader("Upload a file", type=["xlsx"], help="Upload the Excel file if Domains aren't tagged correctly")
 SERP_API_KEY = st.text_input("Enter the API key:", "", help="Enter your SERP API key. You can find this in your SERP API dashboard.")
 
-EXCEL_PATH = os.path.join(os.getcwd(), 'src', 'serprating.xlsx')
-if uploaded_file is not None:
-    update_domain_info(uploaded_file, EXCEL_PATH)
-    st.success('Domain info updated successfully!')
-
-# Allow multiple queries input up to 5 - all using the same regional parameter
+# Allow multiple queries input up ot 5 - all using the same regional parameter
 queries_input = st.text_area("Enter up to 5 search queries, separated by a newline:", "", help="Enter the search terms you want to analyze, one per line. Example: 'best online casinos\nonline gambling sites'.")
 queries = queries_input.strip().split('\n')[:5]  # Split by newline and take up to 5 queries
 
@@ -186,6 +132,16 @@ location = st.selectbox("Select location:", ["los angeles, california, united st
 gl = st.selectbox("Select country code:", ["us", "ca", "au"], help="Select the 2-letter country code. Example: 'US' for the United States.")
 device = st.selectbox("Select device:", ["desktop", "tablet", "mobile"], help="Choose the type of device to simulate the search on. This affects how search results are fetched.")
 
+if uploaded_file is not None:
+    EXCEL_PATH = os.getcwd() + "/src/serprating.xlsx"
+    if os.path.exists(EXCEL_PATH):
+        os.remove(EXCEL_PATH)
+    with open(EXCEL_PATH, "wb") as file:
+        file.write(uploaded_file.getvalue())
+else:
+    EXCEL_PATH = os.getcwd() + '/src/serpratingtest.xlsx'
+
+# Continue from the previous function, assuming previous sections remain unchanged
 if queries and SERP_API_KEY:
     if st.button("Calculate SERP Rating Scores"):
         col1, col2 = st.columns(2)  # Defines two columns for the layout
@@ -213,8 +169,6 @@ if queries and SERP_API_KEY:
                     # Display CliQ KD color based on range
                     cliq_kd_color_message = get_cliQ_kd_color_message(cliq_kd)
                     st.markdown(f"CliQ KD for '{query}' in {location}: {cliq_kd_color_message}", unsafe_allow_html=True)
-                    cliq_kd_message = get_cliQ_kd_message(cliq_kd)
-                    st.subheader(cliq_kd_message)
                     
                     # Summary Section
                     with st.expander("See summary", expanded=False):
@@ -233,10 +187,6 @@ if queries and SERP_API_KEY:
                             markdown_table += f"{row['Position']} | [{row['URL']}]({row['URL']}) | {row['Regulation']} | {row['Class']}\n"
                         st.markdown(markdown_table, unsafe_allow_html=True)
                         
-                        # Download links
-                        st.markdown(get_table_download_link(results_table), unsafe_allow_html=True)
-                        st.markdown(get_excel_download_link(results_table), unsafe_allow_html=True)
-
                         # Enhanced Counts and Links Display
                         st.subheader("Ads and SERP Features:")
                         for section, info in sections_info.items():
@@ -248,3 +198,4 @@ if queries and SERP_API_KEY:
                                     st.markdown(f"- [{link}]({link})", unsafe_allow_html=True)
 
                 current_col += 1  # Move to the next column for the next keyword
+
