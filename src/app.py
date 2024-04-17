@@ -168,6 +168,7 @@ if queries and SERP_API_KEY:
                     st.markdown(f"CliQ KD for '{query}' in {location}: {cliq_kd_color_message}", unsafe_allow_html=True)
 
                     with st.expander("See summary", expanded=False):
+                        print(results_table.columns)  # Debug: Check what columns are available
                         results_table = pd.DataFrame(final_results[:10])
                         st.markdown("Position | URL | Regulation | Class\n--- | --- | --- | ---\n" + "\n".join(
                             f"{row['Position']} | [{row['URL']}]({row['URL']}) | {row['Regulation']} | {row['Class']}" for _, row in results_table.iterrows()), unsafe_allow_html=True)
