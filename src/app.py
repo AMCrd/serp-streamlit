@@ -123,8 +123,9 @@ def to_excel(df):
     try:
         with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
             df.to_excel(writer, sheet_name='Sheet1', index=False)
+            writer.handle_exceptions = False  # Ensure any exceptions are propagated up.
             writer.save()
-            processed_data = output.getvalue()
+        processed_data = output.getvalue()
         return processed_data
     except Exception as e:
         st.error(f"Error in generating Excel file: {str(e)}")
@@ -138,9 +139,15 @@ def get_table_download_link(df):
 
 def get_excel_download_link(df):
     val = to_excel(df)
-    b64 = base64.b64encode(val).decode()
-    href = f'<a href="data:application/octet-stream;base64,{b64}" download="table.xlsx">Download Excel</a>'
-    return href
+    if val is None:
+        return "Error generating Excel file; please try again or check the logs for more details."
+    try:
+        b64 = base64.b64encode(val).decode()
+        href = f'<a href="data:application/octet-stream;base64,{b64}" download="table.xlsx">Download Excel</a>'
+        return href
+    except Exception as e:
+        st.error(f"Error encoding Excel data: {str(e)}")
+        return "Error preparing download link; please try again or check the logs for more details."
 
 # Streamlit UI components setup
 st.set_page_config(layout="wide")
