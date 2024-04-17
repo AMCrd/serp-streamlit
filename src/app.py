@@ -160,7 +160,7 @@ if queries and SERP_API_KEY:
                     classified_organic_results = classify_urls(organic_results, domain_info_df)
                     final_results = assign_numbers_and_calculate_transformed(classified_organic_results)
 
-                    sections_info = extract_links_and count_sections(serp_data)
+                    sections_info = extract_links_and_count_sections(serp_data)
                     serp_rating_score = calculate_serp_rating(final_results, sections_info) * 2
 
                     cliq_kd = (serp_rating_score - 41.2) / (101.3 - 41.2) * 100
