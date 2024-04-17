@@ -177,6 +177,8 @@ EXCEL_PATH = os.path.join(os.getcwd(), 'src', 'serprating.xlsx')
 if uploaded_file is not None:
     update_domain_info(uploaded_file, EXCEL_PATH)
     st.success('Domain info updated successfully!')
+else:
+    EXCEL_PATH = os.getcwd() + '/src/serpratingtest.xlsx'
 
 # Allow multiple queries input up to 5 - all using the same regional parameter
 queries_input = st.text_area("Enter up to 5 search queries, separated by a newline:", "", help="Enter the search terms you want to analyze, one per line. Example: 'best online casinos\nonline gambling sites'.")
