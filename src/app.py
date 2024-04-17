@@ -120,11 +120,15 @@ def calculate_serp_rating(final_results, sections_info):
 # Functions to handle download links
 def to_excel(df):
     output = BytesIO()
-    writer = pd.ExcelWriter(output, engine='xlsxwriter')
-    df.to_excel(writer, index=False, sheet_name='Sheet1')
-    writer.save()
-    processed_data = output.getvalue()
-    return processed_data
+    try:
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            df.to_excel(writer, sheet_name='Sheet1', index=False)
+            writer.save()
+            processed_data = output.getvalue()
+        return processed_data
+    except Exception as e:
+        st.error(f"Error in generating Excel file: {str(e)}")
+        return None
 
 def get_table_download_link(df):
     csv = df.to_csv(index=False)
