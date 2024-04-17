@@ -52,9 +52,17 @@ def get_serp_data(query, location, gl, device):
     return response.json()
 
 def load_domain_info(excel_path):
-    df = pd.read_excel(excel_path, engine='openpyxl')
-    df['Domain'] = df['Domain'].str.lower().str.replace('www.', '')
-    return df
+    if os.path.exists(excel_path):
+        return pd.read_excel(excel_path, engine='openpyxl')
+    else:
+        return pd.DataFrame(columns=['Domain', 'Regulation', 'Class'])  # Create empty DataFrame with expected columns
+
+def update_domain_info(uploaded_file, existing_file_path):
+    existing_df = load_domain_info(existing_file_path)
+    uploaded_df = pd.read_excel(uploaded_file, engine='openpyxl')
+    combined_df = pd.concat([existing_df, uploaded_df], ignore_index=True)
+    combined_df.drop_duplicates(subset='Domain', keep='last', inplace=True)
+    combined_df.to_excel(existing_file_path, index=False, engine='openpyxl')
 
 def classify_urls(organic_results, domain_info_df):
     for result in organic_results:
@@ -117,7 +125,6 @@ def calculate_serp_rating(final_results, sections_info):
     
     return serp_rating
 
-# Functions to handle download links
 def to_excel(df):
     output = BytesIO()
     try:
@@ -152,6 +159,11 @@ st.set_page_config(layout="wide")
 uploaded_file = st.file_uploader("Upload a file", type=["xlsx"], help="Upload the Excel file if Domains aren't tagged correctly")
 SERP_API_KEY = st.text_input("Enter the API key:", "", help="Enter your SERP API key. You can find this in your SERP API dashboard.")
 
+EXCEL_PATH = os.path.join(os.getcwd(), 'src', 'serprating.xlsx')
+if uploaded_file is not None:
+    update_domain_info(uploaded_file, EXCEL_PATH)
+    st.success('Domain info updated successfully!')
+
 # Allow multiple queries input up to 5 - all using the same regional parameter
 queries_input = st.text_area("Enter up to 5 search queries, separated by a newline:", "", help="Enter the search terms you want to analyze, one per line. Example: 'best online casinos\nonline gambling sites'.")
 queries = queries_input.strip().split('\n')[:5]  # Split by newline and take up to 5 queries
@@ -160,16 +172,6 @@ location = st.selectbox("Select location:", ["los angeles, california, united st
 gl = st.selectbox("Select country code:", ["us", "ca", "au"], help="Select the 2-letter country code. Example: 'US' for the United States.")
 device = st.selectbox("Select device:", ["desktop", "tablet", "mobile"], help="Choose the type of device to simulate the search on. This affects how search results are fetched.")
 
-if uploaded_file is not None:
-    EXCEL_PATH = os.getcwd() + "/src/serprating.xlsx"
-    if os.path.exists(EXCEL_PATH):
-        os.remove(EXCEL_PATH)
-    with open(EXCEL_PATH, "wb") as file:
-        file.write(uploaded_file.getvalue())
-else:
-    EXCEL_PATH = os.getcwd() + '/src/serpratingtest.xlsx'
-
-# Continue from the previous function, assuming previous sections remain unchanged
 if queries and SERP_API_KEY:
     if st.button("Calculate SERP Rating Scores"):
         col1, col2 = st.columns(2)  # Defines two columns for the layout
