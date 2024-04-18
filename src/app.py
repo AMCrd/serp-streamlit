@@ -190,7 +190,7 @@ device = st.selectbox("Select device:", ["desktop", "tablet", "mobile"], help="C
 
 if queries and SERP_API_KEY:
     if st.button("Calculate SERP Rating Scores"):
-        col1, col2 = st.columns(2)  # Defines two columns for the layout
+        col1, col2 = st.columns(2)  # Defines two columns for the layou
         current_col = 0  # Helps alternate between columns
         
         for query in queries:
