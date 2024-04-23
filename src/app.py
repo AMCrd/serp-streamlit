@@ -86,8 +86,8 @@ def classify_urls(organic_results, domain_info_df):
             result['Regulation'] = matching_info.iloc[0]['Regulation']
             result['Class'] = matching_info.iloc[0]['Class']
         else:
-            result['Regulation'] = 'Other'
-            result['Class'] = 'Other'
+            result['Regulation'] = 'Untagged'
+            result['Class'] = 'Untagged'
     return organic_results
 
 def assign_numbers_and_calculate_transformed(final_results):
